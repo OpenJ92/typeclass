@@ -1,15 +1,17 @@
 from typing import Generic, TypeVar, Callable, Iterable
 
 from typeclass.protocols.functor import Functor
+from typeclass.protocols.show import Show
+from typeclass.protocols.eq import Eq
 
 A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
 
-class Maybe(Functor[A], Generic[A]):
+class Maybe(Functor[A], Show, Eq, Generic[A]):
     def fmap(self, f: Callable[[A], B]) -> "Maybe[B]":
         match self:
-            case Just(value):
+            case Just(value=value):
                 return Just(f(value))
             case Nothing():
                 return Nothing()
@@ -21,9 +23,16 @@ class Just(Maybe[A]):
     def __repr__(self):
         return f"Just({self.value})"
 
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Just) and self.value == other.value
+
+
 class Nothing(Maybe[A]):
     def __repr__(self):
         return "Nothing()"
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Nothing)
 
 # ----- Additional Functions -----
 
