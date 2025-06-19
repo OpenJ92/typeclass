@@ -1,5 +1,4 @@
-from typing import TypeVar, Protocol, Callable, Generic
-from typing_extensions import Self
+from typing import TypeVar, Protocol, Callable, Generic, Self
 
 A = TypeVar("A")
 B = TypeVar("B")
