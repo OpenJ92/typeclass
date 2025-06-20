@@ -8,7 +8,7 @@ C = TypeVar("C")
 def assert_applicative_identity(v: Applicative[A], cls: type):
     """
     Identity Law:
-        v.ap(cls.pure(lambda x: x)) == v
+        pure id <*> v == v
 
     Ensures that applying a pure identity function has no effect on the applicative value.
 
@@ -19,12 +19,12 @@ def assert_applicative_identity(v: Applicative[A], cls: type):
     Raises:
         AssertionError: If the identity law fails.
     """
-    assert v.ap(cls.pure(lambda x: x)) == v, "Applicative identity law failed"
+    assert cls.pure(lambda x: x).ap(v) == v, "Applicative identity law failed"
 
 def assert_applicative_homomorphism(cls: type, f: Callable[[A], B], x: A):
     """
     Homomorphism Law:
-        cls.pure(x).ap(cls.pure(f)) == cls.pure(f(x))
+        pure f <*> pure x == pure (f x)
 
     Ensures that applying a pure function to a pure value is the same as lifting the result.
 
@@ -36,12 +36,12 @@ def assert_applicative_homomorphism(cls: type, f: Callable[[A], B], x: A):
     Raises:
         AssertionError: If the homomorphism law fails.
     """
-    assert cls.pure(x).ap(cls.pure(f)) == cls.pure(f(x)), "Applicative homomorphism law failed"
+    assert cls.pure(f).ap(cls.pure(x)) == cls.pure(f(x)), "Applicative homomorphism law failed"
 
 def assert_applicative_interchange(cls: type, u: Applicative[Callable[[A], B]], y: A):
     """
     Interchange Law:
-        cls.pure(y).ap(u) == u.ap(cls.pure(lambda f: f(y)))
+        u <*> pure y == pure ($ y) <*> u
 
     Ensures function application is symmetric in the applicative structure.
 
@@ -53,13 +53,17 @@ def assert_applicative_interchange(cls: type, u: Applicative[Callable[[A], B]], 
     Raises:
         AssertionError: If the interchange law fails.
     """
-    assert cls.pure(y).ap(u) == u.ap(cls.pure(lambda f: f(y))), "Applicative interchange law failed"
+    assert cls.pure(lambda f: f(y)).ap(u) == u.ap(cls.pure(y)), "Applicative interchange law failed"
 
-def assert_applicative_composition(cls: type, u: Applicative[Callable[[B], C]], v: Applicative[Callable[[A], B]], w: Applicative[A]):
+def assert_applicative_composition(
+        cls: type
+      , u: Applicative[Callable[[B], C]]
+      , v: Applicative[Callable[[A], B]]
+      , w: Applicative[A]
+      ) -> bool:
     """
     Composition Law:
-        cls.pure(lambda f: lambda g: lambda x: f(g(x))).ap(u).ap(v).ap(w) ==
-        u.ap(v).ap(w)
+        pure (.) <*> u <*> v <*> w == u <*> (v <*> w)
 
     Ensures that function composition behaves correctly in the applicative context.
 
@@ -72,12 +76,15 @@ def assert_applicative_composition(cls: type, u: Applicative[Callable[[B], C]], 
     Raises:
         AssertionError: If the composition law fails.
     """
-    compose = lambda f: lambda g: lambda x: f(g(x))
-    lhs = cls.pure(compose).ap(u).ap(v).ap(w)
-    rhs = u.ap(v).ap(w)
-    assert lhs == rhs, "Applicative composition law failed"
+    assert cls.pure(lambda f: lambda g: lambda x: f(g(x))).ap(u).ap(v).ap(w) == u.ap(v.ap(w))
 
-def assert_applicative_laws(cls: type, v: Applicative[A], f: Callable[[A], B], g: Callable[[B], C], x: A):
+def assert_applicative_laws(
+        cls: type
+      , v: Applicative[A]
+      , f: Callable[[A], B]
+      , g: Callable[[B], C]
+      , x: A
+      ) -> bool:
     """
     Runs all Applicative laws against a class and values.
 
@@ -98,6 +105,6 @@ def assert_applicative_laws(cls: type, v: Applicative[A], f: Callable[[A], B], g
 
     assert_applicative_identity(v, cls)
     assert_applicative_homomorphism(cls, f, x)
-    assert_applicative_interchange(cls, cls.pure(f), x)
+    assert_applicative_interchange(cls, v_, x)
     assert_applicative_composition(cls, u, v_, w)
 

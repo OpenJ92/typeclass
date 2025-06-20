@@ -9,7 +9,7 @@ C = TypeVar("C")
 def assert_functor_identity(functor: Functor[A]):
     """
     Identity Law:
-        fa.fmap(lambda x: x) == fa
+        fmap id == id
 
     Ensures that mapping the identity function over a functor returns the same functor.
 
@@ -24,7 +24,7 @@ def assert_functor_identity(functor: Functor[A]):
 def assert_functor_composition(functor: Functor[A], f: Callable[[A], B], g: Callable[[B], C]):
     """
     Composition Law:
-        fa.fmap(lambda x: g(f(x))) == fa.fmap(f).fmap(g)
+        fmap (f . g) == fmap f . fmap g
 
     Ensures that mapping a composed function is equivalent to mapping in sequence.
 
