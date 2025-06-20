@@ -31,7 +31,17 @@ assert_functor_laws(Nothing(), lambda x: x + 10, lambda x: x * 2)
 print(Just(lambda x: x * 2).ap(Just(5)))
 
 
-from typeclass.syntax.symbols import fmap, replace, ap, pure
+from typeclass.syntax.symbols import fmap, replace, ap, pure, then, skip
 ## Functor fmap and Applicative ap in use. Infix class
 print((Just(10) |fmap| (lambda x: lambda y: x + y)) |ap| Just(9))
 print(Maybe |pure| (lambda x: lambda y: x + y) |ap| Just(10) |ap| Just(9))
+
+print(Just("a") |then| Just("b"))
+print(Just("a") |skip| Just("b"))
+
+print(Nothing() |then| Just("b"))
+print(Just("a") |skip| Nothing())
+
+print(Nothing() |then| Nothing())
+print(Nothing() |skip| Nothing())
+
