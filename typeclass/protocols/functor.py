@@ -1,5 +1,4 @@
 from typing import TypeVar, Protocol, Callable, Generic, Self
-
 A = TypeVar("A")
 B = TypeVar("B")
 
@@ -13,10 +12,10 @@ class Functor(Protocol, Generic[A]):
     All Functor instances must satisfy the following laws:
 
         Identity:
-            fa.fmap(lambda x: x) == fa
+            fmap id == id
 
         Composition:
-            fa.fmap(lambda x: f(g(x))) == fa.fmap(g).fmap(f)
+            fmap (f . g) == fmap f . fmap g
 
     Examples:
         Box(3).fmap(lambda x: x + 1) -> Box(4)

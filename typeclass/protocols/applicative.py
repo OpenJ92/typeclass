@@ -14,17 +14,16 @@ class Applicative(Functor[A], Protocol, Generic[A]):
     All Applicative instances must satisfy the following laws:
 
         Identity:
-            v.ap(cls.pure(lambda x: x)) == v
+            pure id <*> v == v
 
         Homomorphism:
-            cls.pure(x).ap(cls.pure(f)) == cls.pure(f(x))
+            pure f <*> pure x == pure (f x)
 
         Interchange:
-            cls.pure(y).ap(u) == u.ap(cls.pure(lambda f: f(y)))
+            u <*> pure y == pure ($ y) <*> u
 
         Composition:
-            u.ap(v.ap(w.ap(cls.pure(lambda f: lambda g: lambda x: f(g(x)))))) ==
-            u.ap(v).ap(w)
+            pure (.) <*> u <*> v <*> w == u <*> (v <*> w)
     """
 
     def ap(self, ff: "Applicative[Callable[[A], B]]") -> "Applicative[B]":
