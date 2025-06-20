@@ -4,6 +4,7 @@ from typeclass.data.maybe import \
         , is_just, is_nothing, from_maybe, maybe, cat_maybes, map_maybe
         )
 
+
 print(is_just(Just(5)))     # True
 print(is_nothing(Nothing()))  # True
 print(from_maybe(0, Just(10)))  # 10
@@ -26,3 +27,11 @@ print(Just(3) == Nothing())   # False
 
 assert_functor_laws(Just(10), lambda x: x + 10, lambda x: x * 2)
 assert_functor_laws(Nothing(), lambda x: x + 10, lambda x: x * 2)
+
+print(Just(lambda x: x * 2).ap(Just(5)))
+
+
+from typeclass.syntax.symbols import fmap, replace, ap, pure
+## Functor fmap and Applicative ap in use. Infix class
+print((Just(10) |fmap| (lambda x: lambda y: x + y)) |ap| Just(9))
+print(Maybe |pure| (lambda x: lambda y: x + y) |ap| Just(10) |ap| Just(9))
