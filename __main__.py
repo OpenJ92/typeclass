@@ -1,47 +1,42 @@
-from typeclass.laws.functor import assert_functor_laws
-from typeclass.data.maybe import \
-        ( Maybe , Just , Nothing
-        , is_just, is_nothing, from_maybe, maybe, cat_maybes, map_maybe
-        )
+if __name__ == "__main__":
+    from typeclass.data.maybe import Maybe, Just, Nothing
+    from typeclass.syntax.symbols import pure, fmap, ap, otherwise
 
+    # Constructing Just and Nothing
+    a = Just(10)
+    b = Nothing()
 
-print(is_just(Just(5)))     # True
-print(is_nothing(Nothing()))  # True
-print(from_maybe(0, Just(10)))  # 10
-print(from_maybe(0, Nothing()))  # 0
-print(maybe("nope", str, Just(3)))  # "3"
-print(maybe("nope", str, Nothing()))  # "nope"
+    print("a:", a)                    # Just(10)
+    print("b:", b)                    # Nothing()
 
-ms = [Just(1), Nothing(), Just(3)]
-print(cat_maybes(ms))  # [1, 3]
+    # fmap usage
+    inc = lambda x: x + 1
+    print("fmap inc over a:", a |fmap| inc)   # Just(11)
+    print("fmap inc over b:", b |fmap| inc)   # Nothing()
 
-def safe_even(x: int) -> Maybe[int]:
-    return Just(x) if x % 2 == 0 else Nothing()
+    # ap usage
+    plus = lambda x: lambda y: x + y
+    add_fn = Just(plus(3))            # Just(lambda y: 3 + y)
+    val = Just(4)
 
-print(map_maybe(safe_even, range(5)))  # [0, 2, 4]
+    print("ap: Just(3+) <*> Just(4):", add_fn |ap| (lambda: val))    # Just(7)
+    print("ap: Nothing <*> Just(4):", b |ap| (lambda: val))          # Nothing()
 
-print(Just(3) == Just(3))     # True
-print(Just(3) == Just(4))     # False
-print(Nothing() == Nothing()) # True
-print(Just(3) == Nothing())   # False
+    # otherwise usage
+    print("a |otherwise| b:", a |otherwise| b)             # Just(10)
+    print("b |otherwise| a:", b |otherwise| a)             # Just(10)
 
-assert_functor_laws(Just(10), lambda x: x + 10, lambda x: x * 2)
-assert_functor_laws(Nothing(), lambda x: x + 10, lambda x: x * 2)
+    # empty usage
+    print("empty(Maybe) |otherwise| a:", Maybe.empty() |otherwise| a)  # Just(10)
 
-print(Just(lambda x: x * 2).ap(Just(5)))
+    # pure usage
+    print("pure(Maybe, 42):", Maybe |pure| 42)             # Just(42)
 
+    # some/many usage (greedy repetition)
+    from typeclass.protocols.alternative import some, many
 
-from typeclass.syntax.symbols import fmap, replace, ap, pure, then, skip
-## Functor fmap and Applicative ap in use. Infix class
-print((Just(10) |fmap| (lambda x: lambda y: x + y)) |ap| Just(9))
-print(Maybe |pure| (lambda x: lambda y: x + y) |ap| Just(10) |ap| Just(9))
+    def parser(): return Just("x")  # stub "repetition" value
 
-print(Just("a") |then| Just("b"))
-print(Just("a") |skip| Just("b"))
-
-print(Nothing() |then| Just("b"))
-print(Just("a") |skip| Nothing())
-
-print(Nothing() |then| Nothing())
-print(Nothing() |skip| Nothing())
+    print("some:", some(parser))  # Just(...)
+    print("many:", many(parser))  # Just(...)
 
