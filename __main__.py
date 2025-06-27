@@ -1,5 +1,6 @@
 if __name__ == "__main__":
     from typeclass.data.maybe import Maybe, Just, Nothing
+    from typeclass.data.thunk import Thunk
     from typeclass.syntax.symbols import pure, fmap, ap, otherwise
 
     # Constructing Just and Nothing
@@ -33,10 +34,23 @@ if __name__ == "__main__":
     print("pure(Maybe, 42):", Maybe |pure| 42)             # Just(42)
 
     # some/many usage (greedy repetition)
-    from typeclass.protocols.alternative import some, many
+    from typeclass.data.thunk import some, many
 
-    def parser(): return Just("x")  # stub "repetition" value
+    counter = 3
 
-    print("some:", some(parser))  # Just(...)
-    print("many:", many(parser))  # Just(...)
+    def parser() -> Thunk:
+        global counter
+        print("[parser] Counter:", counter)
+        if counter <= 0:
+            return Nothing()
+        counter -= 1
+        return Just("There")
+
+    # Thunk-wrapped parser
+
+    # Use `many` with explicit internal type `Just`
+    result = many(Thunk(lambda: print("What's going on?") or Just("FUCK YOU")), Maybe)
+
+    # Force and print the final result
+    print("Result:", result.force())
 

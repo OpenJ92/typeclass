@@ -1,4 +1,5 @@
 from typing import TypeVar, Protocol, Callable, Generic, Self
+
 A = TypeVar("A")
 B = TypeVar("B")
 

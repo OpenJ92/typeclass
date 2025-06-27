@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Protocol, TypeVar, runtime_checkable, Self
-from .applicative import Applicative
+from typeclass.protocols.applicative import Applicative
 
 A = TypeVar("A")
 A = TypeVar("B")
@@ -71,43 +71,3 @@ def otherwise(fa: Alternative, fb: Alternative) -> Alternative:
         Alternative: The first successful alternative.
     """
     return fa.otherwise(fb)
-
-def thunk(f: Callable[[], Alternative[A]]) -> Alternative[A]:
-    return f()  # allows compatibility with strict ap/fmap/etc
-
-def some(v: Callable[[], Alternative[A]]) -> Alternative[List[A]]:
-    # equivalent to: some x = (:) <$> x <*> many x
-    head = v()
-    tail = lambda: many(v)
-    return head.fmap(lambda x: lambda xs: [x] + xs).ap(thunk(tail))
-
-def many(v: Callable[[], Alternative[A]]) -> Alternative[List[A]]:
-    return some(v).otherwise(thunk(lambda: v().pure([])))
-
-## def some(v: Callable[[], Alternative]) -> Alternative:
-##     """
-##     One or more repetitions of an effectful action.
-## 
-##     Equivalent to: some fa = fa <*> many fa
-## 
-##     Args:
-##         fa (Alternative[Self]): The action to repeat.
-## 
-##     Returns:
-##         Alternative[Self]: The result of one or more repetitions of `fa`.
-##     """
-##     return v().ap(lambda: many(v))
-## 
-## def many(v: Callable[[], Alternative]) -> Alternative:
-##     """
-##     Zero or more repetitions of an effectful action.
-## 
-##     Equivalent to: many fa = some fa <|> pure []
-## 
-##     Args:
-##         fa (Alternative[Self]): The action to repeat.
-## 
-##     Returns:
-##         Alternative[Self]: The result of zero or more repetitions of `fa`.
-##     """
-##     return some(v).otherwise(lambda: v().pure([]))
