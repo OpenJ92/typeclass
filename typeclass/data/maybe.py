@@ -1,7 +1,9 @@
+from __future__ import annotations
 from typing import Generic, TypeVar, Callable, Iterable
 
 from typeclass.protocols.functor import Functor
 from typeclass.protocols.applicative import Applicative
+from typeclass.protocols.alternative import Alternative
 from typeclass.protocols.show import Show
 from typeclass.protocols.eq import Eq
 
@@ -9,22 +11,15 @@ A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
 
-class Maybe(Applicative[A], Functor[A], Show, Eq, Generic[A]):
-    def fmap(self, f: Callable[[A], B]) -> "Maybe[B]":
+class Maybe(Alternative, Applicative[A], Functor[A], Show, Eq, Generic[A]):
+    def fmap(self: Maybe[A], f: Callable[[A], B]) -> Maybe[B]:
         match self:
             case Just(value=value):
                 return Just(f(value))
             case Nothing():
                 return Nothing()
 
-    def ap(self: "Maybe[Callable[[A], B]]", fa: "Maybe[A]") -> "Maybe[B]":
-        """
-        Applies a function wrapped in a Maybe to another Maybe-wrapped value.
-        Behaves like Haskell's `<*>` for Maybe:
-            - Just(f) <*> Just(x) == Just(f(x))
-            - Nothing <*> _       == Nothing
-            - _ <*> Nothing       == Nothing
-        """
+    def ap(self: Maybe[Callable[[A], B]], fa: Maybe[A]) -> Maybe[B]:
         match self, fa:
             case Just(value=f), Just(value=x):
                 return Just(f(x))
@@ -32,30 +27,38 @@ class Maybe(Applicative[A], Functor[A], Show, Eq, Generic[A]):
                 return Nothing()
 
     @classmethod
-    def pure(cls, value: A) -> "Maybe[A]":
-        """
-        Embeds a value into the Maybe context.
-        Equivalent to Haskell's `pure`.
-        """
+    def pure(cls: type, value: A) -> Self:
         return Just(value)
+
+    def otherwise(self: Maybe[A], other: Maybe[A]) -> Maybe[A]:
+        match self:
+            case Just():
+                return self
+            case Nothing():
+                return other
+
+    @classmethod
+    def empty(cls: type) -> Self:
+        return Nothing()
+
+    def __eq__(self: Maybe[A], other: Maybe[A]) -> bool:
+        match self, other:
+            case Just(value=x), Just(value=y):
+                return x == y
+            case Nothing(), Nothing():
+                return True
+        return False
 
 class Just(Maybe[A]):
     def __init__(self, value: A):
         self.value = value
 
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, Just) and self.value == other.value
-
     def __repr__(self):
         return f"Just({self.value})"
-
 
 class Nothing(Maybe[A]):
     def __repr__(self):
         return "Nothing()"
-
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, Nothing)
 
 # ----- Additional Functions -----
 
