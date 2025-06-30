@@ -49,8 +49,7 @@ if __name__ == "__main__":
     # Thunk-wrapped parser
 
     # Use `many` with explicit internal type `Just`
-    result = many(Thunk(lambda: print("What's going on?") or Just("FUCK YOU")), Maybe)
+    result = many(Thunk(parser), Maybe)
+    print(result.force())
 
-    # Force and print the final result
-    print("Result:", result.force())
 

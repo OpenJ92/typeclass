@@ -18,30 +18,46 @@ class Thunk(Alternative, Applicative, Functor, Generic[T]):
         self._value: T | None = None
 
     def force(self) -> T:
-        if not self._evaluated:
-            self._value = self._thunk()
-            self._evaluated = True
-
         # Now recursively force if it's still a thunk
-        value = self._value
+        value = self._thunk()
         while isinstance(value, Thunk):
             value = value.force()
         return value
 
 
     def fmap(self, f: Callable[[A], B]) -> Thunk:
-        return Thunk(lambda: self.force().fmap(f))  # T must be a Functor
+        functor = self.force()
+        return Thunk(lambda: functor.fmap(f))
 
+    def ap(self: Thunk[TF], other: Thunk[TF]) -> Thunk[TF]:
+        def defered():
+            f = self.force()
+            if f == type(f).empty():
+                return Thunk(lambda: type(f).empty())
 
-    def ap(self: Thunk[TF], ff: Thunk[TF]) -> Thunk[TF]:
-        return Thunk(lambda: self.force().ap(ff.force()))  # TF must be an Applicative
+            x = other.force()
+            if x == type(x).empty():
+                return Thunk(lambda: type(x).empty())
+
+            return Thunk(lambda: f.ap(x))
+        return Thunk(defered)
 
     @classmethod
     def pure(cls: type, value: A):
         return Thunk(lambda: value)
 
-    def otherwise(self: Thunk[TA], alt: Thunk[TA]) -> Thunk[TA]:
-        return Thunk(lambda: self.force().otherwise(alt.force()))  # TA must be an Alternative
+    def otherwise(self: Thunk[TA], other: Thunk[TA]) -> Thunk[TA]:
+        def defered():
+            a = self.force()
+            if a == type(a).empty():
+                return other.force()
+
+            b = other.force()
+            if b == type(b).empty():
+                return Thunk(lambda: type(b).empty())
+
+            return Thunk(lambda: a.otherwise(b))
+        return Thunk(defered)
 
     @classmethod
     def empty(cls: type) -> Self:
@@ -54,11 +70,9 @@ class Thunk(Alternative, Applicative, Functor, Generic[T]):
 from typeclass.syntax.symbols import pure, fmap, ap, otherwise
 
 def some(v: Thunk, internal: type) -> Thunk:
-    print("[some] Called")
-    return Thunk(lambda: ((v |fmap| (lambda x: lambda xs: [x] + xs)) |ap| many(v, internal)) \
-               |otherwise| Thunk(lambda: internal |pure| []))
+    return (v |fmap| (lambda x: lambda xs: [x] + xs) |ap| Thunk(lambda: many(v, internal))) \
+               |otherwise| Thunk(lambda: internal |pure| [])
 
 def many(v: Thunk, internal: type) -> Thunk:
-    print("[many] Called")
-    return Thunk(lambda: some(v, internal) |otherwise| Thunk(lambda: internal |pure| []))
+    return Thunk(lambda: some(v, internal)) |otherwise| Thunk(lambda: internal |pure| [])
 
