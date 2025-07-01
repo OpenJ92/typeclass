@@ -39,7 +39,7 @@ class Thunk(Alternative, Applicative, Functor, Generic[T]):
             if x == type(x).empty():
                 return Thunk(lambda: type(x).empty())
 
-            return Thunk(lambda: f.ap(x))
+            return f.ap(x)
         return Thunk(defered)
 
     @classmethod
@@ -56,7 +56,7 @@ class Thunk(Alternative, Applicative, Functor, Generic[T]):
             if b == type(b).empty():
                 return Thunk(lambda: type(b).empty())
 
-            return Thunk(lambda: a.otherwise(b))
+            return a.otherwise(b)
         return Thunk(defered)
 
     @classmethod
@@ -70,8 +70,7 @@ class Thunk(Alternative, Applicative, Functor, Generic[T]):
 from typeclass.syntax.symbols import pure, fmap, ap, otherwise
 
 def some(v: Thunk, internal: type) -> Thunk:
-    return (v |fmap| (lambda x: lambda xs: [x] + xs) |ap| Thunk(lambda: many(v, internal))) \
-               |otherwise| Thunk(lambda: internal |pure| [])
+    return v |fmap| (lambda x: lambda xs: [x] + xs) |ap| Thunk(lambda: many(v, internal))
 
 def many(v: Thunk, internal: type) -> Thunk:
     return Thunk(lambda: some(v, internal)) |otherwise| Thunk(lambda: internal |pure| [])

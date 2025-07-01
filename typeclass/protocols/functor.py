@@ -1,4 +1,5 @@
 from typing import TypeVar, Protocol, Callable, Generic, Self
+from dataclass import dataclass
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -37,6 +38,11 @@ class Functor(Protocol, Generic[A]):
         """
         ...
 
+@dataclass
+class FreeFmap:
+    func: Callable[[A], B]
+    value: Functor[A]
+
 def fmap(functor: Functor[A], f: Callable[[A], B]) -> Functor[B]:
     """
     Map a function over a functor using external syntax.
@@ -50,7 +56,7 @@ def fmap(functor: Functor[A], f: Callable[[A], B]) -> Functor[B]:
     Returns:
         A new functor with the function applied.
     """
-    return functor.fmap(f)
+    return FreeFmap(f, Thunk(lambda:functor))
 
 def replace(value: A, functor: Functor[B]) -> Functor[A]:
     """
