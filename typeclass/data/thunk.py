@@ -24,44 +24,22 @@ class Thunk(Alternative, Applicative, Functor, Generic[T]):
             value = value.force()
         return value
 
+    ## def otherwise(self: Thunk[TA], other: Thunk[TA]) -> Thunk[TA]:
+    ##     def defered():
+    ##         a = self.force()
+    ##         if a == type(a).empty():
+    ##             return other.force()
 
-    def fmap(self, f: Callable[[A], B]) -> Thunk:
-        functor = self.force()
-        return Thunk(lambda: functor.fmap(f))
+    ##         b = other.force()
+    ##         if b == type(b).empty():
+    ##             return Thunk(lambda: type(b).empty())
 
-    def ap(self: Thunk[TF], other: Thunk[TF]) -> Thunk[TF]:
-        def defered():
-            f = self.force()
-            if f == type(f).empty():
-                return Thunk(lambda: type(f).empty())
+    ##         return a.otherwise(b)
+    ##     return Thunk(defered)
 
-            x = other.force()
-            if x == type(x).empty():
-                return Thunk(lambda: type(x).empty())
-
-            return Thunk(lambda: f.ap(x))
-        return Thunk(defered)
-
-    @classmethod
-    def pure(cls: type, value: A):
-        return Thunk(lambda: value)
-
-    def otherwise(self: Thunk[TA], other: Thunk[TA]) -> Thunk[TA]:
-        def defered():
-            a = self.force()
-            if a == type(a).empty():
-                return other.force()
-
-            b = other.force()
-            if b == type(b).empty():
-                return Thunk(lambda: type(b).empty())
-
-            return Thunk(lambda: a.otherwise(b))
-        return Thunk(defered)
-
-    @classmethod
-    def empty(cls: type) -> Self:
-        return Thunk(lambda:None)
+    ## @classmethod
+    ## def empty(cls: type) -> Self:
+    ##     return Thunk(lambda:None)
 
     def __repr__(self):
         return f"Thunk({self._value!r})" if self._evaluated else "Thunk(<unevaluated>)"
@@ -70,8 +48,7 @@ class Thunk(Alternative, Applicative, Functor, Generic[T]):
 from typeclass.syntax.symbols import pure, fmap, ap, otherwise
 
 def some(v: Thunk, internal: type) -> Thunk:
-    return (v |fmap| (lambda x: lambda xs: [x] + xs) |ap| Thunk(lambda: many(v, internal))) \
-               |otherwise| Thunk(lambda: internal |pure| [])
+    return v |fmap| (lambda x: lambda xs: [x] + xs) |ap| Thunk(lambda: many(v, internal))
 
 def many(v: Thunk, internal: type) -> Thunk:
     return Thunk(lambda: some(v, internal)) |otherwise| Thunk(lambda: internal |pure| [])
