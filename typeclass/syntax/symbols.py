@@ -1,6 +1,6 @@
 from typeclass.syntax.infix import Infix
-from typeclass.protocols.functor import fmap, replace
-from typeclass.protocols.applicative import ap, pure, then, skip
+from typeclass.syntax.functor import fmap, replace
+from typeclass.syntax.applicative import ap, pure, then, skip
 from typeclass.protocols.alternative import otherwise, empty
 
 fmap    = Infix(fmap)
