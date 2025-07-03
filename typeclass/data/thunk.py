@@ -18,38 +18,11 @@ class Thunk(Alternative, Applicative, Functor, Generic[T]):
         self._value: T | None = None
 
     def force(self) -> T:
-        # Now recursively force if it's still a thunk
         value = self._thunk()
         while isinstance(value, Thunk):
             value = value.force()
         return value
 
-    ## def otherwise(self: Thunk[TA], other: Thunk[TA]) -> Thunk[TA]:
-    ##     def defered():
-    ##         a = self.force()
-    ##         if a == type(a).empty():
-    ##             return other.force()
-
-    ##         b = other.force()
-    ##         if b == type(b).empty():
-    ##             return Thunk(lambda: type(b).empty())
-
-    ##         return a.otherwise(b)
-    ##     return Thunk(defered)
-
-    ## @classmethod
-    ## def empty(cls: type) -> Self:
-    ##     return Thunk(lambda:None)
-
     def __repr__(self):
         return f"Thunk({self._value!r})" if self._evaluated else "Thunk(<unevaluated>)"
-
-
-from typeclass.syntax.symbols import pure, fmap, ap, otherwise
-
-def some(v: Thunk, internal: type) -> Thunk:
-    return v |fmap| (lambda x: lambda xs: [x] + xs) |ap| Thunk(lambda: many(v, internal))
-
-def many(v: Thunk, internal: type) -> Thunk:
-    return Thunk(lambda: some(v, internal)) |otherwise| Thunk(lambda: internal |pure| [])
 

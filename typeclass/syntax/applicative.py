@@ -9,12 +9,12 @@ B = TypeVar("B")
 C = TypeVar("C")
 
 @dataclass
-class FreeAp:
+class Ap:
     fa: Applicative[A]
     ff: Applicative[Callable[[A], B]]
 
 @dataclass
-class FreePure:
+class Pure:
     cls: type
     value: A
 
@@ -31,10 +31,10 @@ def ap(fa: Applicative[A], ff: Applicative[Callable[[A], B]]) -> Applicative[B]:
     Returns:
         An Applicative containing the result of applying the function to the value.
     """
-    return FreeAp(Thunk(lambda: fa), Thunk(lambda: ff))
+    return Ap(Thunk(lambda: fa), Thunk(lambda: ff))
 
 def pure(cls: type, value: A):
-    return FreePure(cls, Thunk(lambda: value))
+    return Pure(cls, Thunk(lambda: value))
 
 def liftA2(f: Callable[[A, B], C], fa: Applicative[A], fb: Applicative[B]) -> Applicative[C]:
     """
