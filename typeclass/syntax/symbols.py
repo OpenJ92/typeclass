@@ -1,7 +1,7 @@
 from typeclass.syntax.infix import Infix
 from typeclass.syntax.functor import fmap, replace
 from typeclass.syntax.applicative import ap, pure, then, skip
-from typeclass.protocols.alternative import otherwise, empty
+from typeclass.syntax.alternative import otherwise, empty, some, many
 
 fmap    = Infix(fmap)
 replace = Infix(replace)

@@ -1,29 +1,45 @@
-from typeclass.syntax.functor import FreeMap
-from typeclass.syntax.applicative import FreeAp, FreePure
+from typeclass.syntax.functor import Map
+from typeclass.syntax.applicative import Ap, Pure
+from typeclass.syntax.alternative import Otherwise, Empty
+
 from typeclass.data.thunk import Thunk
 
-def interpret(free_expr, cofree, env):
+def interpret(free, cofree, env):
 
-    match free_expr:
-        case FreePure(cls, value):
-            return Thunk(lambda: cls.pure(value.force()))
+    match free:
 
-        case FreeMap(function, value):
+        case Map(function, value):
             return Thunk(lambda: value.force().fmap(function))
 
-        case FreeAp(free_func, free_arg):
-            def defered():
-                f = interpret(free_func.force(), None, None).force()
-                if f == type(f).empty():
-                    return Thunk(lambda: type(f).empty())
+        case Pure(cls, value):
+            return Thunk(lambda: cls.pure(value.force()))
 
-                x = interpret(free_arg.force(), None, None).force()
-                if x == type(x).empty():
-                    return Thunk(lambda: type(x).empty())
+        case Ap(function, value):
+            function = interpret(function.force(), None, None).force()
+            if function == type(function).empty():
+                return Thunk(lambda: type(function).empty())
 
-                return f.ap(x)
-            return Thunk(defered)
+            value = interpret(value.force(), None, None).force()
+            if value == type(value).empty():
+                return Thunk(lambda: type(value).empty())
+
+            return Thunk(lambda: function.ap(value))
+
+        case Empty(cls):
+            return Thunk(lambda: cls.empty())
+
+        case Otherwise(alter, native):
+            alter = interpret(alter.force(), None, None).force()
+            if alter != type(alter).empty():
+                return Thunk(lambda: alter)
+
+            native = interpret(native.force(), None, None).force()
+            if native != type(native).empty():
+                return Thunk(lambda: native)
+
+            return Thunk(lambda: alter.otherwise(native))
+
         case _:
-            return Thunk(lambda: free_expr)
+            return Thunk(lambda: free)
 
 
