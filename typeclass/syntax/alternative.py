@@ -20,13 +20,13 @@ class Otherwise:
 
 @dataclass
 class Some:
-    v: Thunk
     internal: type
+    v: Thunk
 
 @dataclass
 class Many:
-    v: Thunk
     internal: type
+    v: Thunk
 
 
 def empty(cls: type[Alternative]) -> Alternative:
@@ -59,10 +59,10 @@ def otherwise(fa: Alternative, fb: Alternative) -> Alternative:
     return Otherwise(Thunk(lambda: fa), Thunk(lambda: fb))
 
 
-def some(v: Thunk, internal: type) -> Thunk:
-    return Some(v, internal)
+def some(internal: type, v: Thunk) -> Thunk:
+    return Some(internal, v)
 
-def many(v: Thunk, internal: type) -> Thunk:
-    return Many(v, internal)
+def many(internal: type, v: Thunk) -> Thunk:
+    return Many(internal, v)
 
 

@@ -29,16 +29,16 @@ def interpret(free, cofree, env):
             native = interpret(native.force(), None, None)
             return Thunk(lambda: alter.otherwise(native))
         
-        case Many(v, internal):
-            some = Thunk(lambda: Some(v, internal))
+        case Many(internal, v):
+            some = Thunk(lambda: Some(internal, v))
             pure = Thunk(lambda: Pure(internal, Thunk(lambda: [])))
             otherwise = Otherwise(some, pure)
             return Thunk(lambda: interpret(otherwise, None, None).force())
 
-        case Some(v, internal):
+        case Some(internal, v):
             cons = (lambda x: (lambda xs: [x] + xs))
             map  = Thunk(lambda: Map(cons, v))
-            many = Thunk(lambda: Many(v, internal))
+            many = Thunk(lambda: Many(internal, v))
             ap   = Ap(map, many)
             return Thunk(lambda: interpret(ap, None, None).force())
 
