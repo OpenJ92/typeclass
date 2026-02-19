@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, TypeVar, runtime_checkable, Self
-from typeclass.protocols.applicative import Applicative
+from typeclass.protocols.alternative import Alternative
 from typeclass.syntax.functor import fmap
 from typeclass.syntax.applicative import pure, ap
 from typeclass.data.thunk import Thunk
@@ -18,6 +18,16 @@ class Otherwise:
     fa: Alternative
     fb: Alternative
 
+@dataclass
+class Some:
+    v: Thunk
+    internal: type
+
+@dataclass
+class Many:
+    v: Thunk
+    internal: type
+
 
 def empty(cls: type[Alternative]) -> Alternative:
     """
@@ -32,6 +42,7 @@ def empty(cls: type[Alternative]) -> Alternative:
         Alt
     """
     return Empty(cls)
+
 def otherwise(fa: Alternative, fb: Alternative) -> Alternative:
     """
     Provide a fallback between two Alternative values.
@@ -49,9 +60,9 @@ def otherwise(fa: Alternative, fb: Alternative) -> Alternative:
 
 
 def some(v: Thunk, internal: type) -> Thunk:
-    return ap(fmap(v, (lambda x: lambda xs: [x] + xs)), Thunk(lambda: many(v, internal)))
+    return Some(v, internal)
 
 def many(v: Thunk, internal: type) -> Thunk:
-    return otherwise(Thunk(lambda: some(v, internal)), Thunk(lambda: pure(internal,[])))
+    return Many(v, internal)
 
 

@@ -10,15 +10,15 @@ C = TypeVar("C")
 
 @dataclass
 class Ap:
-    fa: Applicative[A]
     ff: Applicative[Callable[[A], B]]
+    fa: Applicative[A]
 
 @dataclass
 class Pure:
     cls: type
     value: A
 
-def ap(fa: Applicative[A], ff: Applicative[Callable[[A], B]]) -> Applicative[B]:
+def ap(ff: Applicative[Callable[[A], B]], fa: Applicative[A]) -> Applicative[B]:
     """
     Apply a function wrapped in an applicative context to a value wrapped in the same context.
 
@@ -31,7 +31,7 @@ def ap(fa: Applicative[A], ff: Applicative[Callable[[A], B]]) -> Applicative[B]:
     Returns:
         An Applicative containing the result of applying the function to the value.
     """
-    return Ap(Thunk(lambda: fa), Thunk(lambda: ff))
+    return Ap(Thunk(lambda: ff), Thunk(lambda: fa))
 
 def pure(cls: type, value: A):
     return Pure(cls, Thunk(lambda: value))
