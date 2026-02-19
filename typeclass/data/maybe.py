@@ -21,7 +21,8 @@ class Maybe(Alternative, Applicative[A], Functor[A], Show, Eq, Generic[A]):
 
     def ap(self: Maybe[Callable[[A], B]], fa: Maybe[A]) -> Maybe[B]:
         match self, fa:
-            case Just(value=f), Just(value=x):
+            case Just(value=f):
+                x = fa.force()
                 return Just(f(x))
             case _:
                 return Nothing()
@@ -35,7 +36,7 @@ class Maybe(Alternative, Applicative[A], Functor[A], Show, Eq, Generic[A]):
             case Just():
                 return self
             case Nothing():
-                return other
+                return other.force()
 
     @classmethod
     def empty(cls: type) -> Self:
