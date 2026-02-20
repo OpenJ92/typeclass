@@ -12,5 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy your source files
 COPY . .
 
+RUN pip install -e .
+
 # Start an interactive shell by default
 CMD ["bash"]
