@@ -60,9 +60,9 @@ def otherwise(fa: Alternative, fb: Alternative) -> Alternative:
 
 
 def some(internal: type, v: Thunk) -> Thunk:
-    return Some(internal, v)
+    return Some(internal, Thunk(lambda: v))
 
 def many(internal: type, v: Thunk) -> Thunk:
-    return Many(internal, v)
+    return Many(internal, Thunk(lambda: v))
 
 
