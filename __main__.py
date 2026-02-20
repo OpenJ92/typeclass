@@ -1,12 +1,7 @@
 if __name__ == "__main__":
     from typeclass.data.thunk import Thunk
     from typeclass.data.maybe import Maybe, Just, Nothing
-    from typeclass.syntax.alternative import some, many, otherwise, empty
     from typeclass.syntax.applicative import pure, liftA2
-    from typeclass.interpret.interpreter import interpret
-    
-    from typeclass.data.maybe import Maybe, Just, Nothing
-    from typeclass.data.thunk import Thunk
     from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many
     from typeclass.interpret.interpreter import interpret
 
@@ -40,5 +35,3 @@ if __name__ == "__main__":
     # Alternative fallback: empty <|> pure(99)  => Just(99)
     expr_alt = empty(Maybe) |otherwise| (Maybe |pure| 99)
     print("empty <|> pure(99) =", interpret(expr_alt, None, None).force())
-
-
