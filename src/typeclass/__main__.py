@@ -1,6 +1,7 @@
 if __name__ == "__main__":
     from typeclass.data.thunk import Thunk
     from typeclass.data.maybe import Maybe, Just, Nothing
+    from typeclass.data.parser import Parser
     from typeclass.syntax.applicative import pure, liftA2
     from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many
     from typeclass.interpret.interpreter import interpret
@@ -35,3 +36,20 @@ if __name__ == "__main__":
     # Alternative fallback: empty <|> pure(99)  => Just(99)
     expr_alt = empty(Maybe) |otherwise| (Maybe |pure| 99)
     print("empty <|> pure(99) =", interpret(expr_alt, None, None).force())
+
+
+    ## Parser Example
+    def digit() -> Parser[str]:
+        def run(s: str):
+            if s and s[0].isdigit():
+                return [(s[0], s[1:])]
+            return []
+        return Parser(run)
+
+    def combine(a):
+        return lambda b: int(a + b)
+
+
+    free = Parser |pure| combine |ap| digit() |ap| digit()
+    result = interpret(free, None, None).force().run("42xyz")
+    print(result, result == [(42, "xyz")])
