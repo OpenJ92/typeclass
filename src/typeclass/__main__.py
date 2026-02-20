@@ -64,6 +64,11 @@ if __name__ == "__main__":
     result = interpret(digits, None, None).force().run("42xyz")
     print(result, result == [(['4', '2'], "xyz")])
 
-    whitespace = Parser |many| Thunk(lambda: Thunk(lambda: char(" ")) |otherwise| Thunk(lambda: char("\t")))
+    whitespace = Parser |many| (char(" ") |otherwise| char("\t"))
     result = interpret(whitespace, None, None).force().run(" \t42xyz")
     print(result, result == [([' ', '\t'], '42xyz')])
+
+    number = Parser |some| digit() |fmap| (lambda xs: int("".join(xs)))
+    result = interpret(number, None, None).force().run("271828xyz")
+    print(result, result == [(271828, 'xyz')])
+
