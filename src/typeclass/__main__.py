@@ -49,7 +49,21 @@ if __name__ == "__main__":
     def combine(a):
         return lambda b: int(a + b)
 
+    def char(a):
+        def run(s: str):
+            if s and s[0] == a:
+                return [(s[0], s[1:])]
+            return []
+        return Parser(run)
 
     free = Parser |pure| combine |ap| digit() |ap| digit()
     result = interpret(free, None, None).force().run("42xyz")
     print(result, result == [(42, "xyz")])
+
+    digits = Parser |many| Thunk(lambda: digit())
+    result = interpret(digits, None, None).force().run("42xyz")
+    print(result, result == [(['4', '2'], "xyz")])
+
+    whitespace = Parser |many| Thunk(lambda: Thunk(lambda: char(" ")) |otherwise| Thunk(lambda: char("\t")))
+    result = interpret(whitespace, None, None).force().run(" \t42xyz")
+    print(result, result == [([' ', '\t'], '42xyz')])
