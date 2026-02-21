@@ -50,7 +50,7 @@ def bind(ma: Monad[A], f: Callable[[A],Monad[B]]) -> Monad[B]:
     """
     return Bind(Thunk(lambda: ma), Thunk(lambda: f))
 
-def then(ma: Monad[A], mb: Monad[B]) -> Monad[B]:
+def mthen(ma: Monad[A], mb: Monad[B]) -> Monad[B]:
     """
     Sequence two monadic computations, discarding the result of the first.
 
@@ -80,7 +80,7 @@ def join(mma: Monad[Monad[A]]) -> Monad[A]:
     """
     return bind(mma, lambda ma: ma)
 
-def bind_flipped(f: Callable[[A], Monad[B]], ma: Monad[A]) -> Monad[B]:
+def rbind(f: Callable[[A], Monad[B]], ma: Monad[A]) -> Monad[B]:
     """
     Apply a monadic function to a monadic value (flipped bind).
 
@@ -111,7 +111,7 @@ def kleisli(f: Callable[[A], Monad[B]], g: Callable[[B], Monad[C]]) -> Callable[
     """
     return lambda a: bind(f(a), g)
 
-def kleisli_rev(g: Callable[[B], Monad[C]],
+def rkleisli(g: Callable[[B], Monad[C]],
                 f: Callable[[A], Monad[B]]) -> Callable[[A], Monad[C]]:
     """
     Compose two monadic functions (reverse order).
