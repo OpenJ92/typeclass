@@ -2,6 +2,7 @@ from typeclass.syntax.infix import Infix
 from typeclass.syntax.functor import fmap, replace
 from typeclass.syntax.applicative import ap, pure, then, skip
 from typeclass.syntax.alternative import otherwise, empty, some, many
+from typeclass.syntax.monad import bind, return_, mthen, join, rbind, kleisli, rkleisli
 
 fmap    = Infix(fmap)
 replace = Infix(replace)
@@ -12,3 +13,9 @@ skip = Infix(skip)
 otherwise = Infix(otherwise)
 some = Infix(some)
 many = Infix(many)
+bind = Infix(bind)
+return_ = Infix(return_)
+mthen = Infix(mthen)
+rbind = Infix(fbind)
+kleisli = Infix(kleisli)
+rkleisli = Infix(rkleisli)
