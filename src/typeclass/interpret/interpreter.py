@@ -1,4 +1,5 @@
-from typeclass.syntax.functor import Map from typeclass.syntax.applicative import Ap, Pure
+from typeclass.syntax.functor import Map 
+from typeclass.syntax.applicative import Ap, Pure
 from typeclass.syntax.alternative import Otherwise, Empty, Some, Many
 from typeclass.syntax.monad import Bind, Return
 
@@ -37,9 +38,9 @@ def interpret(free, cofree, env):
 
         case Some(internal, v):
             cons = (lambda x: (lambda xs: [x] + xs))
-            map  = Thunk(lambda: Map(cons, v))
+            _map  = Thunk(lambda: Map(cons, v))
             many = Thunk(lambda: Many(internal, v))
-            ap   = Ap(map, many)
+            ap   = Ap(_map, many)
             return Thunk(lambda: interpret(ap, None, None).force())
 
         case Return(cls, value):
@@ -48,7 +49,7 @@ def interpret(free, cofree, env):
 
         case Bind(ma, f):
             ma = interpret(ma.force(), None, None).force()
-            f = interpret(f.force(), None, None))
+            f = interpret(f.force(), None, None)
 
             def k(a):
                 return interpret(f.force()(a), None, None)

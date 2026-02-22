@@ -4,6 +4,7 @@ from typing import Generic, TypeVar, Callable, Iterable
 from typeclass.protocols.functor import Functor
 from typeclass.protocols.applicative import Applicative
 from typeclass.protocols.alternative import Alternative
+from typeclass.protocols.monad import Monad
 from typeclass.protocols.show import Show
 from typeclass.protocols.eq import Eq
 
@@ -11,7 +12,7 @@ A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
 
-class Maybe(Alternative, Applicative[A], Functor[A], Show, Eq, Generic[A]):
+class Maybe(Monad, Alternative, Applicative[A], Functor[A], Show, Eq, Generic[A]):
     def fmap(self: Maybe[A], f: Callable[[A], B]) -> Maybe[B]:
         match self:
             case Just(value=value):
@@ -20,12 +21,13 @@ class Maybe(Alternative, Applicative[A], Functor[A], Show, Eq, Generic[A]):
                 return Nothing()
 
     def ap(self: Maybe[Callable[[A], B]], fa: Maybe[A]) -> Maybe[B]:
-        match self, fa:
+        match self:
             case Just(value=f):
                 x = fa.force()
-                return Just(f(x))
-            case _:
-                return Nothing()
+                match x:
+                    case Just(value=x):
+                        return Just(f(x))
+        return Nothing()
 
     @classmethod
     def pure(cls: type, value: A) -> Self:
@@ -49,6 +51,15 @@ class Maybe(Alternative, Applicative[A], Functor[A], Show, Eq, Generic[A]):
             case Nothing(), Nothing():
                 return True
         return False
+
+    def bind(self: Maybe[A], mf: Callable[[A], Maybe[B]]) -> Maybe[B]:
+        match self:
+            case Just(value=a):
+                mf = mf.force()
+                return mf(a)
+            case Nothing():
+                return Nothing()
+        
 
 class Just(Maybe[A]):
     def __init__(self, value: A):
