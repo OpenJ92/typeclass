@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from typeing import Typevar, Callable
+from typing import TypeVar, Callable
 
 from typeclass.data.thunk import Thunk
 from typeclass.protocols.monad import Monad
 
-A = Typevar("A")
-B = Typevar("B")
+A = TypeVar("A")
+B = TypeVar("B")
 
 @dataclass
 class Return:
