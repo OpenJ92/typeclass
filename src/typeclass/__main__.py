@@ -3,7 +3,7 @@ if __name__ == "__main__":
     from typeclass.data.maybe import Maybe, Just, Nothing
     from typeclass.data.parser import Parser
     from typeclass.syntax.applicative import pure, liftA2
-    from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many
+    from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind
     from typeclass.interpret.interpreter import interpret
 
     free = Just(10) |fmap| (lambda x: x + 5)
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     result = interpret(free, None, None).force().run("42xyz")
     print(result, result == [(42, "xyz")])
 
-    digits = Parser |many| Thunk(lambda: digit())
+    digits = Parser |many| digit()
     result = interpret(digits, None, None).force().run("42xyz")
     print(result, result == [(['4', '2'], "xyz")])
 
@@ -72,3 +72,17 @@ if __name__ == "__main__":
     result = interpret(number, None, None).force().run("271828xyz")
     print(result, result == [(271828, 'xyz')])
 
+    def plus_one(x: int):
+        return Just(x+1)
+
+    free = Maybe |pure| 10 |bind| plus_one
+    result = interpret(free, None, None).force()
+    print(result, result == Just(11))
+
+    free = digit() |bind| (lambda d: char(str(int(d) + 1)))
+    result = interpret(free, None, None).force().run("343")
+    print(result)
+
+    free = Parser |many| free
+    result = interpret(free, None, None).force().run("123456789")
+    print(result)

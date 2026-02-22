@@ -4,6 +4,7 @@ from typing import Generic, TypeVar, Callable, Iterable
 from typeclass.protocols.functor import Functor
 from typeclass.protocols.applicative import Applicative
 from typeclass.protocols.alternative import Alternative
+from typeclass.protocols.monad import Monad
 from typeclass.protocols.show import Show
 from typeclass.protocols.eq import Eq
 
@@ -11,7 +12,7 @@ A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
 
-class Parser(Alternative, Applicative[A], Functor[A], Generic[A]):
+class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
     def __init__(self, _run: Callable[[str], list[tuple[A, str]]]):
         self._run = _run
 
@@ -48,4 +49,13 @@ class Parser(Alternative, Applicative[A], Functor[A], Generic[A]):
             if not left:
                 return right.force().run(input)
             return left
+        return Parser(inner)
+        
+    def bind(self: Parser[A], fm: Callable[[A], Parser[B]]) -> Parser[B]:
+        def inner(input: str) -> list[tuple[A, str]]:
+            _fm, results = fm.force(), []
+            for (a, left) in self.run(input):
+                for (b, right) in _fm(a).force().run(left):
+                    results.append((b, right))
+            return results
         return Parser(inner)
