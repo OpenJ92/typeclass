@@ -11,7 +11,12 @@ def interpret(free, cofree, env):
 
         case Map(function, value):
             value = interpret(value.force(), None, None).force()
-            return Thunk(lambda: value.fmap(function))
+            function = interpret(function.force(), None, None)
+
+            def k(a):
+                return interpret(function.force()(a), None, None).force()
+
+            return Thunk(lambda: value.fmap(Thunk(lambda: k)))
 
         case Pure(cls, value):
             value = interpret(value.force(), None, None).force()
@@ -30,16 +35,16 @@ def interpret(free, cofree, env):
             native = interpret(native.force(), None, None)
             return Thunk(lambda: alter.otherwise(native))
         
-        case Many(internal, v):
-            some = Thunk(lambda: Some(internal, v))
-            pure = Thunk(lambda: Pure(internal, Thunk(lambda: [])))
+        case Many(cls, value):
+            some = Thunk(lambda: Some(cls, value))
+            pure = Thunk(lambda: Pure(cls, Thunk(lambda: [])))
             otherwise = Otherwise(some, pure)
             return Thunk(lambda: interpret(otherwise, None, None).force())
 
-        case Some(internal, v):
-            cons = (lambda x: (lambda xs: [x] + xs))
-            _map  = Thunk(lambda: Map(cons, v))
-            many = Thunk(lambda: Many(internal, v))
+        case Some(cls, value):
+            cons = Thunk(lambda: (lambda x: (lambda xs: [x] + xs)))
+            _map  = Thunk(lambda: Map(cons, value))
+            many = Thunk(lambda: Many(cls, value))
             ap   = Ap(_map, many)
             return Thunk(lambda: interpret(ap, None, None).force())
 
@@ -52,7 +57,7 @@ def interpret(free, cofree, env):
             f = interpret(f.force(), None, None)
 
             def k(a):
-                return interpret(f.force()(a), None, None)
+                return interpret(f.force()(a), None, None).force()
 
             return Thunk(lambda: ma.bind(Thunk(lambda: k)))
 
