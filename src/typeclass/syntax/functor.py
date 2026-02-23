@@ -24,7 +24,7 @@ def fmap(functor: Functor[A], f: Callable[[A], B]) -> Functor[B]:
     Returns:
         A new functor with the function applied.
     """
-    return Map(f, Thunk(lambda:functor))
+    return Map(Thunk(lambda: f), Thunk(lambda:functor))
 
 def replace(value: A, functor: Functor[B]) -> Functor[A]:
     """

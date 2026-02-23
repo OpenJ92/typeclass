@@ -16,7 +16,7 @@ class Maybe(Monad, Alternative, Applicative[A], Functor[A], Show, Eq, Generic[A]
     def fmap(self: Maybe[A], f: Callable[[A], B]) -> Maybe[B]:
         match self:
             case Just(value=value):
-                return Just(f(value))
+                return Just(f.force()(value))
             case Nothing():
                 return Nothing()
 

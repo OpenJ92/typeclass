@@ -23,7 +23,7 @@ class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
         def inner(input: str) -> list[tuple[B, str]]:
             results = []
             for (a, rest) in  self.run(input):
-                results.append((f(a), rest))
+                results.append((f.force()(a), rest))
             return results
         return Parser(inner)
 
@@ -55,7 +55,7 @@ class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
         def inner(input: str) -> list[tuple[A, str]]:
             _fm, results = fm.force(), []
             for (a, left) in self.run(input):
-                for (b, right) in _fm(a).force().run(left):
+                for (b, right) in _fm(a).run(left):
                     results.append((b, right))
             return results
         return Parser(inner)
