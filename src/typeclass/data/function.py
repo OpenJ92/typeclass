@@ -29,12 +29,9 @@ class Function(Monad, Applicative[B], Functor[B], Show, Eq, Generic[A, B]):
       Monad:        bind g k     = \a -> k(g(a))(a)
     """
 
-    _run: Callable[[A], B]
+    _run : Callable[[A], B]
 
     # --- core --------------------------------------------------------------
-
-    def run(self, a: A) -> B:
-        return self._run(a)
 
     def __call__(self, a: A) -> B:
         return self._run(a)
@@ -43,7 +40,9 @@ class Function(Monad, Applicative[B], Functor[B], Show, Eq, Generic[A, B]):
 
     def fmap(self: Function[A, B], f: Callable[[B], C]) -> Function[A, C]:
         def inner(a: A) -> C:
-            return f.force()(self.run(a))
+            function = f.force()
+            value = self(a)
+            return function(value)
         return Function(inner)
 
     # --- Applicative -------------------------------------------------------
@@ -56,14 +55,18 @@ class Function(Monad, Applicative[B], Functor[B], Show, Eq, Generic[A, B]):
 
     def ap(self: Function[A, Callable[[B], C]], fb: Function[A, B]) -> Function[A, C]:
         def inner(a: A) -> C:
-            return func(fb.force().run(a))
+            function = self(a)
+            value = fb.force()(a)
+            return function(value)
         return Function(inner)
 
     # --- Monad -------------------------------------------------------------
 
     def bind(self: Function[A, B], fm: Callable[[B], Function[A, C]]) -> Function[A, C]:
         def inner(a: A) -> C:
-            return fm_(self.run(a)).run(a)
+            value = self(a)
+            function = fm.force()(value)
+            return function(a)
         return Function(inner)
 
     # --- Show / Eq ---------------------------------------------------------
