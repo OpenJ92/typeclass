@@ -19,6 +19,8 @@ class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
     def run(self, input: str) -> list[tuple[A, str]]:
         return self._run(input)
 
+    # --- Functor -----------------------------------------------------------
+
     def fmap(self: Parser[A], f: Callable[[A],B]) -> Parser[B]:
         def inner(input: str) -> list[tuple[B, str]]:
             results = []
@@ -26,6 +28,8 @@ class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
                 results.append((f.force()(a), rest))
             return results
         return Parser(inner)
+
+    # --- Applicative -------------------------------------------------------
 
     @classmethod
     def pure(cls: type, value: A):
@@ -40,6 +44,8 @@ class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
             return results
         return Parser(inner)
 
+    # --- Alternative -------------------------------------------------------
+
     def empty(cls) -> Parser[A]:
         return Parser(lambda input: [])
 
@@ -51,6 +57,8 @@ class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
             return left
         return Parser(inner)
         
+    # --- Monad -------------------------------------------------------------
+
     def bind(self: Parser[A], fm: Callable[[A], Parser[B]]) -> Parser[B]:
         def inner(input: str) -> list[tuple[A, str]]:
             _fm, results = fm.force(), []
