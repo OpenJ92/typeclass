@@ -96,7 +96,9 @@ if __name__ == "__main__":
     result = interpret(free, None, None).force()(10)
     print(result, result == 21)
 
-    free = Function |pure| (lambda x: lambda y: (x, y)) |ap| Function(lambda x: x) |ap| Function(lambda y: 2*y)
+    free = Function |pure| (lambda x: lambda y: (x, y)) \
+                    |ap|    Function(lambda x: x)       \
+                    |ap|    Function(lambda y: 2*y)
     result = interpret(free, None, None).force()(10)
     print(result, result == (10,20))
 
