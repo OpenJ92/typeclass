@@ -23,7 +23,8 @@ class Isomorphism(Groupoid, Morphism[A, B], Generic[A, B]):
         return Isomorphism(self._inv, self._run)
 
     def compose(self: Isomorphism[B, C], other: Morphism[A, B]) -> Morphism[A, C]:
-        match other:
+        function = other.force()
+        match function:
             case Isomorphism(_run=frun, _inv=finv):
                 def fwd(a: A) -> C:
                     return self(frun(a))
