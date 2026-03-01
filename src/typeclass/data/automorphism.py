@@ -2,14 +2,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Generic, TypeVar
 
-from typeclass.data.isomorphism import Isomorphism
+from typeclass.data.endomorphism import Endomorphism
 from typeclass.protocols.group import Group
 
 T = TypeVar("T")
 
 
 @dataclass(frozen=True)
-class Automorphism(Group, Isomorphism[T, T], Generic[T]):
+class Automorphism(Group, Endomorphism[T], Generic[T]):
     """
     Invertible endomorphism T <-> T.
     Group + Groupoid collapse here.
@@ -19,7 +19,8 @@ class Automorphism(Group, Isomorphism[T, T], Generic[T]):
     _inv: Callable[[T], T]
 
     def compose(self, other):
-        match other:
+        function = other.force()
+        match function:
             case Automorphism(_run=frun, _inv=finv):
                 def fwd(t: T) -> T:
                     return self(frun(t))

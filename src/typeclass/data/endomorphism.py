@@ -19,19 +19,21 @@ class Endomorphism(Monoid, Semigroup, Morphism[T, T], Generic[T]):
     _run: Callable[[T], T]
 
     def compose(self, other: Morphism[T, T]) -> Morphism[T, T]:
-        match other:
+        function = other.force()
+        match function:
             case Endomorphism():
                 def inner(t: T) -> T:
-                    return self(other(t))
+                    return self(function(t))
                 return Endomorphism(inner)
             case _:
                 return super().compose(other)
 
     def combine(self, other: Endomorphism[T]) -> Endomorphism[T]:
-        match other:
+        function = other.force()
+        match function:
             case Endomorphism():
                 def inner(t: T) -> T:
-                    return self(other(t))
+                    return self(function(t))
                 return Endomorphism(inner)
 
     @classmethod
