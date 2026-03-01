@@ -23,11 +23,13 @@ class Morphism(Category, Semigroupoid, Generic[A, B]):
 
     def compose(self: Morphism[B, C], other: Morphism[A, B]) -> Morphism[A, C]:
         def inner(a: A) -> C:
+            function = other.force()
             return self(other(a))
         return Morphism(inner)
 
-    def then(self: Morphism[A, B], nxt: Morphism[B, C]) -> Morphism[A, C]:
-        return nxt.compose(self)
+    def then(self: Morphism[A, B], other: Morphism[B, C]) -> Morphism[A, C]:
+        function = other.force()
+        return function.compose(self)
 
     @classmethod
     def id(cls) -> Morphism[A, A]:

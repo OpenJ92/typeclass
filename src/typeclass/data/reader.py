@@ -16,15 +16,13 @@ from typeclass.protocols.eq import Eq
 A = TypeVar("A")   # environment / input
 B = TypeVar("B")   # output / contained
 C = TypeVar("C")
-D = TypeVar("D")
-
 
 @dataclass(frozen=True)
-class Function(Category, Semigroupoid, Monoid, Semigroup, Monad[B], Applicative[B], Functor[B], Show, Eq, Generic[A, B]):
+class Reader(Monad[B], Applicative[B], Functor[B], Show, Eq, Generic[A, B]):
     """
     Reader / (->) A  as a type constructor in B.
 
-    Think: Function[A, B] ~ (A -> B)
+    Think: Reader[A, B] ~ (A -> B)
 
     Instances (pointwise, at the same A):
       Functor:      fmap f (g)   = f ∘ g
@@ -37,75 +35,47 @@ class Function(Category, Semigroupoid, Monoid, Semigroup, Monad[B], Applicative[
 
     # --- core --------------------------------------------------------------
 
-    def __call__(self, a: A) -> B:
+    def run(self, a: A) -> B:
         return self._run(a)
 
     # --- Functor -----------------------------------------------------------
 
-    def fmap(self: Function[A, B], f: Callable[[B], C]) -> Function[A, C]:
+    def fmap(self: Reader[A, B], f: Callable[[B], C]) -> Reader[A, C]:
         def inner(a: A) -> C:
             function = f.force()
-            value = self(a)
+            value = self.run(a)
             return function(value)
-        return Function(inner)
+        return Reader(inner)
 
     # --- Applicative -------------------------------------------------------
 
     @classmethod
-    def pure(cls: type, value: B) -> Function[A, B]:
+    def pure(cls: type, value: B) -> Reader[A, B]:
         def inner(_: A) -> B:
             return value
-        return Function(inner)
+        return Reader(inner)
 
-    def ap(self: Function[A, Callable[[B], C]], fb: Function[A, B]) -> Function[A, C]:
+    def ap(self: Reader[A, Callable[[B], C]], fb: Reader[A, B]) -> Reader[A, C]:
         def inner(a: A) -> C:
-            function = self(a)
-            value = fb.force()(a)
+            function = self.run(a)
+            value = fb.force().run(a)
             return function(value)
-        return Function(inner)
+        return Reader(inner)
 
     # --- Monad -------------------------------------------------------------
 
-    def bind(self: Function[A, B], fm: Callable[[B], Function[A, C]]) -> Function[A, C]:
+    def bind(self: Reader[A, B], fm: Callable[[B], Reader[A, C]]) -> Reader[A, C]:
         def inner(a: A) -> C:
-            value = self(a)
-            function = fm.force()(value)
+            value = self.run(a)
+            function = fm.force().run(value)
             return function(a)
-        return Function(inner)
-
-    # --- Semigroup ---------------------------------------------------------
-
-    def combine(self: Function[A, A], other: Function[A, A]) -> Function[A, A]:
-        def inner(a: A):
-            function = other.force()
-            return self(function(a))
-        return Function(inner)
-
-    # --- Monoid ------------------------------------------------------------
-
-    @classmethod
-    def mempty(cls):
-        return Function(lambda value: value)
-
-    # --- Semigroupoid ------------------------------------------------------
-
-    def compose(self: Function[B, C], other: Function[A, B]) -> Function[A, C]:
-        def inner(a: A):
-            function = other.force()
-            return self(function(a))
-        return Function(inner)
-
-    # --- Category ---------------------------------------------------------
-
-    @classmethod
-    def id(cls):
-        return Function(lambda value: value)
+        return Reader(inner)
     
     # --- Show / Eq ---------------------------------------------------------
 
     def show(self) -> str:
-        return f"Function({self._run!r})"
+        return f"Reader({self._run!r})"
 
     def eq(self, other: object) -> bool:
         # Extensional equality is undecidable in general; keep it structural.
-        return isinstance(other, Function) and self._run is other._run
+        return isinstance(other, Reader) and self._run is other._run
