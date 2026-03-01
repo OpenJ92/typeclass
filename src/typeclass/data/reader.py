@@ -35,7 +35,7 @@ class Reader(Monad[B], Applicative[B], Functor[B], Show, Eq, Generic[A, B]):
 
     # --- core --------------------------------------------------------------
 
-    def __call__(self, a: A) -> B:
+    def run(self, a: A) -> B:
         return self._run(a)
 
     # --- Functor -----------------------------------------------------------
@@ -43,7 +43,7 @@ class Reader(Monad[B], Applicative[B], Functor[B], Show, Eq, Generic[A, B]):
     def fmap(self: Reader[A, B], f: Callable[[B], C]) -> Reader[A, C]:
         def inner(a: A) -> C:
             function = f.force()
-            value = self(a)
+            value = self.run(a)
             return function(value)
         return Reader(inner)
 
@@ -57,8 +57,8 @@ class Reader(Monad[B], Applicative[B], Functor[B], Show, Eq, Generic[A, B]):
 
     def ap(self: Reader[A, Callable[[B], C]], fb: Reader[A, B]) -> Reader[A, C]:
         def inner(a: A) -> C:
-            function = self(a)
-            value = fb.force()(a)
+            function = self.run(a)
+            value = fb.force().run(a)
             return function(value)
         return Reader(inner)
 
@@ -66,8 +66,8 @@ class Reader(Monad[B], Applicative[B], Functor[B], Show, Eq, Generic[A, B]):
 
     def bind(self: Reader[A, B], fm: Callable[[B], Reader[A, C]]) -> Reader[A, C]:
         def inner(a: A) -> C:
-            value = self(a)
-            function = fm.force()(value)
+            value = self.run(a)
+            function = fm.force().run(value)
             return function(a)
         return Reader(inner)
     
