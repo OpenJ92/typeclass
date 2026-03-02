@@ -3,6 +3,7 @@ from typeclass.syntax.applicative import Ap, Pure
 from typeclass.syntax.alternative import Otherwise, Empty, Some, Many
 from typeclass.syntax.monad import Bind, Return
 from typeclass.syntax.semigroupoid import Compose
+from typeclass.syntax.category import ID
 
 from typeclass.data.thunk import Thunk
 
@@ -67,6 +68,9 @@ def interpret(free, cofree, env):
             fab = interpret(fab.force(), None, None)
 
             return Thunk(lambda: fbc.compose(fab))
+
+        case ID(cls):
+            return Thunk(lambda: cls.id())
 
         case _:
             return Thunk(lambda: free)

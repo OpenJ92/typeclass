@@ -4,6 +4,7 @@ from typeclass.syntax.applicative import ap, pure, then, skip
 from typeclass.syntax.alternative import otherwise, empty, some, many
 from typeclass.syntax.monad import bind, return_, mthen, join, rbind, kleisli, rkleisli
 from typeclass.syntax.semigroupoid import compose, rcompose
+from typeclass.syntax.category import identity
 
 fmap    = Infix(fmap)
 replace = Infix(replace)
