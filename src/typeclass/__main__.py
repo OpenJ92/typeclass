@@ -4,9 +4,10 @@ if __name__ == "__main__":
     from typeclass.data.parser import Parser
     from typeclass.data.reader import Reader
     from typeclass.data.morphism import Morphism
+    from typeclass.data.endomorphism import Endomorphism
     from typeclass.syntax.applicative import pure, liftA2
     from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
-    compose, rcompose
+    compose, rcompose, identity
     from typeclass.interpret.interpreter import interpret
 
     free = Just(10) |fmap| (lambda x: x + 5)
@@ -111,5 +112,12 @@ if __name__ == "__main__":
     free = Morphism(lambda x: x * x) |rcompose| Morphism(lambda y: y + 1)
     result = interpret(free, None, None).force()(10)
     print(result, result == 101)
+
+    function = lambda x: x + 1
+    forward  = identity(Morphism) |compose| Morphism(function)
+    backward = Morphism(function) |compose| identity(Morphism)
+    fresult = interpret(forward, None, None).force()(10)
+    bresult = interpret(backward, None, None).force()(10)
+    print(f"{fresult} == {bresult}", fresult == bresult)
 
 
