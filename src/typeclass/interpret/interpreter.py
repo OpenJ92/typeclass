@@ -4,6 +4,7 @@ from typeclass.syntax.alternative import Otherwise, Empty, Some, Many
 from typeclass.syntax.monad import Bind, Return
 from typeclass.syntax.semigroupoid import Compose
 from typeclass.syntax.category import ID
+from typeclass.syntax.groupoid import Invert
 
 from typeclass.data.thunk import Thunk
 
@@ -71,6 +72,9 @@ def interpret(free, cofree, env):
 
         case ID(cls):
             return Thunk(lambda: cls.id())
+
+        case Invert(fab):
+            return Thunk(lambda: fab.invert())
 
         case _:
             return Thunk(lambda: free)
