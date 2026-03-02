@@ -120,4 +120,9 @@ if __name__ == "__main__":
     bresult = interpret(backward, None, None).force()(10)
     print(f"{fresult} == {bresult}", fresult == bresult)
 
-
+    function = lambda x: lambda y: x + y
+    left  = (Morphism(function(1)) |compose| Morphism(function(2))) |compose| Morphism(function(3))
+    right = Morphism(function(1)) |compose| (Morphism(function(2)) |compose| Morphism(function(3)))
+    lresult = interpret(left, None, None).force()(10)
+    rresult = interpret(right, None, None).force()(10)
+    print(f"{lresult} == {rresult}", lresult == rresult)

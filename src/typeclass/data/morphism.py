@@ -27,10 +27,6 @@ class Morphism(Category, Semigroupoid, Generic[A, B]):
             return self(function(a))
         return Morphism(inner)
 
-    def then(self: Morphism[A, B], other: Morphism[B, C]) -> Morphism[A, C]:
-        function = other.force()
-        return function.compose(self)
-
     @classmethod
     def id(cls) -> Morphism[A, A]:
         return Morphism(lambda x: x)
