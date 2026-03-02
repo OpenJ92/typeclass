@@ -3,8 +3,10 @@ if __name__ == "__main__":
     from typeclass.data.maybe import Maybe, Just, Nothing
     from typeclass.data.parser import Parser
     from typeclass.data.reader import Reader
+    from typeclass.data.morphism import Morphism
     from typeclass.syntax.applicative import pure, liftA2
-    from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind
+    from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
+    compose, rcompose
     from typeclass.interpret.interpreter import interpret
 
     free = Just(10) |fmap| (lambda x: x + 5)
@@ -89,18 +91,25 @@ if __name__ == "__main__":
     print(result, result == [(['2', '4', '6', '8'], '9')])
 
     free = Reader(lambda x: 10*x) |fmap| (lambda y: 5*str(y))
-    result = interpret(free, None, None).force()(1)
+    result = interpret(free, None, None).force().run(1)
     print(result, result == "1010101010")
 
     free = Reader(lambda x: x + 1) |bind| (lambda y: Reader(lambda x: x + y))
-    result = interpret(free, None, None).force()(10)
+    result = interpret(free, None, None).force().run(10)
     print(result, result == 21)
 
     free = Reader |pure| (lambda x: lambda y: (x, y)) \
                     |ap|    Reader(lambda x: x)       \
                     |ap|    Reader(lambda y: 2*y)
-    result = interpret(free, None, None).force()(10)
+    result = interpret(free, None, None).force().run(10)
     print(result, result == (10,20))
 
+    free = Morphism(lambda x: x + 1) |compose| Morphism(lambda y: y * y)
+    result = interpret(free, None, None).force()(10)
+    print(result, result == 101)
+
+    free = Morphism(lambda x: x * x) |rcompose| Morphism(lambda y: y + 1)
+    result = interpret(free, None, None).force()(10)
+    print(result, result == 101)
 
 

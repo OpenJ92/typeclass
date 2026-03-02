@@ -2,6 +2,7 @@ from typeclass.syntax.functor import Map
 from typeclass.syntax.applicative import Ap, Pure
 from typeclass.syntax.alternative import Otherwise, Empty, Some, Many
 from typeclass.syntax.monad import Bind, Return
+from typeclass.syntax.semigroupoid import Compose
 
 from typeclass.data.thunk import Thunk
 
@@ -60,6 +61,12 @@ def interpret(free, cofree, env):
                 return interpret(f.force()(a), None, None).force()
 
             return Thunk(lambda: ma.bind(Thunk(lambda: k)))
+
+        case Compose(fbc, fab):
+            fbc = interpret(fbc.force(), None, None).force()
+            fab = interpret(fab.force(), None, None)
+
+            return Thunk(lambda: fbc.compose(fab))
 
         case _:
             return Thunk(lambda: free)

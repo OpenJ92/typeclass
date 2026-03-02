@@ -1,4 +1,3 @@
-from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, TypeVar, runtime_checkable, Self
 from typeclass.protocols.alternative import Alternative
@@ -60,9 +59,45 @@ def otherwise(fa: Alternative, fb: Alternative) -> Alternative:
 
 
 def some(internal: type, v: Thunk) -> Thunk:
+    """
+    Match one or more occurrences of an Alternative value.
+
+    Equivalent to the recursive definition:
+
+        some(v) = pure(cons) <*> v <*> many(v)
+
+    Requires at least one successful match of `v`.
+
+    If `v` fails, the entire computation fails.
+
+    Args:
+        internal (type): The Alternative implementation.
+        v (Thunk): The Alternative computation to repeat.
+
+    Returns:
+        Alternative: One or more occurrences of `v`.
+    """
     return Some(internal, Thunk(lambda: v))
 
 def many(internal: type, v: Thunk) -> Thunk:
+    """
+    Match zero or more occurrences of an Alternative value.
+
+    Equivalent to the recursive definition:
+
+        many(v) = some(v) <|> pure(empty)
+
+    Always succeeds, even if `v` fails.
+
+    Represents repetition under the Alternative structure.
+
+    Args:
+        internal (type): The Alternative implementation.
+        v (Thunk): The Alternative computation to repeat.
+
+    Returns:
+        Alternative: Zero or more occurrences of `v`.
+    """
     return Many(internal, Thunk(lambda: v))
 
 

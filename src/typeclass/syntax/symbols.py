@@ -3,6 +3,7 @@ from typeclass.syntax.functor import fmap, replace
 from typeclass.syntax.applicative import ap, pure, then, skip
 from typeclass.syntax.alternative import otherwise, empty, some, many
 from typeclass.syntax.monad import bind, return_, mthen, join, rbind, kleisli, rkleisli
+from typeclass.syntax.semigroupoid import compose, rcompose
 
 fmap    = Infix(fmap)
 replace = Infix(replace)
@@ -19,3 +20,5 @@ mthen = Infix(mthen)
 rbind = Infix(rbind)
 kleisli = Infix(kleisli)
 rkleisli = Infix(rkleisli)
+compose = Infix(compose)
+rcompose = Infix(rcompose)
