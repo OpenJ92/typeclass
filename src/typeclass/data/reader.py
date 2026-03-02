@@ -67,8 +67,8 @@ class Reader(Monad[B], Applicative[B], Functor[B], Show, Eq, Generic[A, B]):
     def bind(self: Reader[A, B], fm: Callable[[B], Reader[A, C]]) -> Reader[A, C]:
         def inner(a: A) -> C:
             value = self.run(a)
-            function = fm.force().run(value)
-            return function(a)
+            function = fm.force()(value)
+            return function.run(a)
         return Reader(inner)
     
     # --- Show / Eq ---------------------------------------------------------
