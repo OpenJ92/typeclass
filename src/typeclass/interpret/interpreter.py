@@ -6,6 +6,7 @@ from typeclass.syntax.semigroupoid import Compose
 from typeclass.syntax.category import ID
 from typeclass.syntax.groupoid import Invert
 from typeclass.syntax.semigroup import Combine
+from typeclass.syntax.monoid import MEmpty
 
 from typeclass.data.thunk import Thunk
 
@@ -83,6 +84,9 @@ def interpret(free, cofree, env):
             b = interpret(b.force(), None, None)
 
             return Thunk(lambda: a.combine(b))
+
+        case MEmpty(cls):
+            return Thunk(lambda: cls.mempty())
             
         case _:
             return Thunk(lambda: free)

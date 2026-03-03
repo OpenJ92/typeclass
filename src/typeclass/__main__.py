@@ -9,7 +9,7 @@ if __name__ == "__main__":
     from typeclass.data.automorphism import Automorphism
     from typeclass.syntax.applicative import pure, liftA2
     from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
-    compose, rcompose, identity, invert, combine
+    compose, rcompose, identity, invert, combine, mempty
     from typeclass.interpret.interpreter import interpret
 
     free = Just(10) |fmap| (lambda x: x + 5)
@@ -142,3 +142,12 @@ if __name__ == "__main__":
     result = interpret(endo, None, None).force()
     print(result(0), result(0) == 0)
 
+    endo = Endomorphism(left)
+    identity = mempty(Endomorphism)
+    forward = endo |combine| identity
+    backward = identity |combine| endo
+
+    fresult = interpret(forward, None, None).force()
+    bresult = interpret(backward, None, None).force()
+
+    print(f"{fresult(10)} == {bresult(10)}", fresult(10) == bresult(10))
