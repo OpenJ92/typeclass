@@ -42,4 +42,4 @@ def invert(self: Groupid):
     Returns:
         Groupoid: The inverse morphism from B to A.
     """
-    return Invert(self)
+    return Invert(Thunk(lambda: self))
