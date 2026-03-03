@@ -7,6 +7,7 @@ from typeclass.syntax.category import ID
 from typeclass.syntax.groupoid import Invert
 from typeclass.syntax.semigroup import Combine
 from typeclass.syntax.monoid import MEmpty
+from typeclass.syntax.group import Inverse
 
 from typeclass.data.thunk import Thunk
 
@@ -87,6 +88,11 @@ def interpret(free, cofree, env):
 
         case MEmpty(cls):
             return Thunk(lambda: cls.mempty())
+
+        case Inverse(fab):
+            fab = interpret(fab.force(), None, None).force()
+
+            return Thunk(lambda: fab.inverse())
             
         case _:
             return Thunk(lambda: free)
