@@ -8,6 +8,96 @@ Do not use, distribute, or derive from this work.
 
 ---
 
+# Motivation
+
+Modern software is built from composition.
+
+We compose:
+
+* Functions into pipelines
+* Parsers into grammars
+* Transformations into rendering systems
+* Effects into programs
+* Computations into graphs
+
+Yet most composition in Python is informal and unstructured. We rely on conventions instead of laws.
+
+This project explores a different approach:
+
+> What if compositional patterns were expressed explicitly as algebraic structures?
+
+> What if composition, aggregation, and contextual computation were:
+>
+> * Lawful
+> * Symbolic
+> * Interpretable
+> * Inspectable
+> * Rewritable
+
+Instead of executing immediately, operations in this framework construct symbolic computation nodes. These nodes are later interpreted by a unified interpreter.
+
+The result is a system where:
+
+* Composition obeys associativity and identity laws.
+* Aggregation obeys monoidal laws.
+* Effects obey functor and monad laws.
+* Reversible structures explicitly encode invertibility.
+* Computation graphs can be reasoned about before execution.
+
+This repository is an experiment in building a coherent algebraic substrate for compositional computation in Python.
+
+---
+
+# Plain English Overview
+
+This project builds a small algebraic engine where:
+
+* Functions can be composed symbolically.
+* Values can be combined using associative operations.
+* Effects (like parsing or optional values) can be structured and chained.
+* All computation is represented as a graph before it runs.
+
+Instead of writing:
+
+```python
+f(g(x))
+```
+
+you build:
+
+```python
+free = Morphism(f) |compose| Morphism(g)
+result = interpret(free).force()(x)
+```
+
+The difference is that the composition is now:
+
+* Explicit
+* Law-preserving
+* Inspectable
+* Transformable before execution
+
+The framework implements three independent but complementary hierarchies:
+
+1. **Flow** — composition of arrows (`Category`, `Groupoid`)
+2. **Aggregation** — associative combination of values (`Monoid`, `Group`)
+3. **Effects** — contextual computation (`Functor`, `Applicative`, `Monad`)
+
+All of these structures are unified under a single symbolic interpreter.
+
+The goal is not to recreate Haskell in Python.
+The goal is to make compositional structure explicit, lawful, and extensible.
+
+This foundation enables:
+
+* Structured computation graphs
+* Reversible transformations
+* Balanced monoidal folds
+* Static analysis of computation
+* A future Arrow layer for DAG-style programming
+
+---
+
 # Algebraic Architecture
 
 This project implements a law-preserving algebraic execution engine built around three orthogonal towers:
