@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Optional: activate virtual environment
 # source venv/bin/activate
 
 echo "Running unit tests..."
