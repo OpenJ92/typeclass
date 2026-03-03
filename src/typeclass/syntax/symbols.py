@@ -6,6 +6,7 @@ from typeclass.syntax.monad import bind, return_, mthen, join, rbind, kleisli, r
 from typeclass.syntax.semigroupoid import compose, rcompose
 from typeclass.syntax.category import identity
 from typeclass.syntax.groupoid import invert
+from typeclass.syntax.semigroup import combine
 
 fmap    = Infix(fmap)
 replace = Infix(replace)
@@ -24,3 +25,4 @@ kleisli = Infix(kleisli)
 rkleisli = Infix(rkleisli)
 compose = Infix(compose)
 rcompose = Infix(rcompose)
+combine = Infix(combine)

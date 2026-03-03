@@ -9,7 +9,7 @@ if __name__ == "__main__":
     from typeclass.data.automorphism import Automorphism
     from typeclass.syntax.applicative import pure, liftA2
     from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
-    compose, rcompose, identity, invert
+    compose, rcompose, identity, invert, combine
     from typeclass.interpret.interpreter import interpret
 
     free = Just(10) |fmap| (lambda x: x + 5)
@@ -52,7 +52,7 @@ if __name__ == "__main__":
             return []
         return Parser(run)
 
-    def combine(a):
+    def _combine(a):
         return lambda b: int(a + b)
 
     def char(a):
@@ -62,7 +62,7 @@ if __name__ == "__main__":
             return []
         return Parser(run)
 
-    free = Parser |pure| combine |ap| digit() |ap| digit()
+    free = Parser |pure| _combine |ap| digit() |ap| digit()
     result = interpret(free, None, None).force().run("42xyz")
     print(result, result == [(42, "xyz")])
 
@@ -134,6 +134,11 @@ if __name__ == "__main__":
     free = invert(auto)
     free = auto |compose| free
     result = interpret(free, None, None).force()
+    print(result(0), result(0) == 0)
 
-
+    left = lambda x: x + 1
+    right = lambda x: x - 1
+    endo = Endomorphism(left) |combine| Endomorphism(right)
+    result = interpret(endo, None, None).force()
+    print(result(0), result(0) == 0)
 
