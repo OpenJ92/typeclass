@@ -9,7 +9,7 @@ if __name__ == "__main__":
     from typeclass.data.automorphism import Automorphism
     from typeclass.syntax.applicative import pure, liftA2
     from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
-    compose, rcompose, identity, invert, combine, mempty
+    compose, rcompose, identity, invert, combine, mempty, inverse
     from typeclass.interpret.interpreter import interpret
 
     free = Just(10) |fmap| (lambda x: x + 5)
@@ -151,3 +151,13 @@ if __name__ == "__main__":
     bresult = interpret(backward, None, None).force()
 
     print(f"{fresult(10)} == {bresult(10)}", fresult(10) == bresult(10))
+
+    from math import cos, acos, pi
+    auto = Automorphism(cos, acos)
+    ainv = inverse(auto)
+    back = ainv |combine| auto
+    bresult = interpret(back, None, None).force()
+
+    print(bresult(pi), bresult(pi) == pi)
+
+
