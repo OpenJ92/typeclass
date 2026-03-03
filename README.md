@@ -6,8 +6,6 @@ Haskell → Python typeclass isomorphism
 This repository is not licensed for public use.
 Do not use, distribute, or derive from this work.
 
-Perfect. Below is a structured Markdown section you can paste directly into your `README.md`. It integrates the **value tower**, **arrow tower**, and now the **effect tower** (Functor → Monad), showing how everything fits into one coherent algebraic system.
-
 ---
 
 # Algebraic Architecture
