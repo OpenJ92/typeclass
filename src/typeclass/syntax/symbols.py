@@ -7,6 +7,7 @@ from typeclass.syntax.semigroupoid import compose, rcompose
 from typeclass.syntax.category import identity
 from typeclass.syntax.groupoid import invert
 from typeclass.syntax.semigroup import combine
+from typeclass.syntax.monoid import mempty
 
 fmap    = Infix(fmap)
 replace = Infix(replace)
