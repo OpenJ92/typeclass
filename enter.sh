@@ -1,5 +1,4 @@
 #!/bin/bash
-
 IMAGE_NAME="typeclass"
 
 echo "🛠️  Building Docker image: $IMAGE_NAME"
