@@ -27,7 +27,7 @@ class Group(Monoid, Protocol):
             invert(x) <> x == mempty
     """
 
-    def invert(self) -> Self:
+    def inverse(self) -> Self:
         """
         Return the inverse of this value.
 

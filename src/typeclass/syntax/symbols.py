@@ -4,6 +4,11 @@ from typeclass.syntax.applicative import ap, pure, then, skip
 from typeclass.syntax.alternative import otherwise, empty, some, many
 from typeclass.syntax.monad import bind, return_, mthen, join, rbind, kleisli, rkleisli
 from typeclass.syntax.semigroupoid import compose, rcompose
+from typeclass.syntax.category import identity
+from typeclass.syntax.groupoid import invert
+from typeclass.syntax.semigroup import combine
+from typeclass.syntax.monoid import mempty
+from typeclass.syntax.group import inverse
 
 fmap    = Infix(fmap)
 replace = Infix(replace)
@@ -22,3 +27,4 @@ kleisli = Infix(kleisli)
 rkleisli = Infix(rkleisli)
 compose = Infix(compose)
 rcompose = Infix(rcompose)
+combine = Infix(combine)

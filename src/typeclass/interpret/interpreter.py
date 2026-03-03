@@ -3,6 +3,11 @@ from typeclass.syntax.applicative import Ap, Pure
 from typeclass.syntax.alternative import Otherwise, Empty, Some, Many
 from typeclass.syntax.monad import Bind, Return
 from typeclass.syntax.semigroupoid import Compose
+from typeclass.syntax.category import ID
+from typeclass.syntax.groupoid import Invert
+from typeclass.syntax.semigroup import Combine
+from typeclass.syntax.monoid import MEmpty
+from typeclass.syntax.group import Inverse
 
 from typeclass.data.thunk import Thunk
 
@@ -68,6 +73,27 @@ def interpret(free, cofree, env):
 
             return Thunk(lambda: fbc.compose(fab))
 
+        case ID(cls):
+            return Thunk(lambda: cls.id())
+
+        case Invert(fab):
+            fab = interpret(fab.force(), None, None).force()
+            return Thunk(lambda: fab.invert())
+
+        case Combine(a, b):
+            a = interpret(a.force(), None, None).force()
+            b = interpret(b.force(), None, None)
+
+            return Thunk(lambda: a.combine(b))
+
+        case MEmpty(cls):
+            return Thunk(lambda: cls.mempty())
+
+        case Inverse(fab):
+            fab = interpret(fab.force(), None, None).force()
+
+            return Thunk(lambda: fab.inverse())
+            
         case _:
             return Thunk(lambda: free)
 
