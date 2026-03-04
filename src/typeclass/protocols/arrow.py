@@ -89,15 +89,15 @@ class Arrow(Category, Protocol, Generic[A, B]):
     """
 
     @classmethod
-    def arr(cls, f: Callable[[A], B]) -> Arrow[A, B]:
+    def arrow(cls, f: Callable[[A], B]) -> Arrow[A, B]:
         """
         Lift a pure function into the Arrow.
 
         Equivalent to embedding (->) into the Arrow.
 
         Must satisfy:
-            cls.arr(lambda x: x) == cls.id()
-            cls.arr(g).compose(cls.arr(f)) == cls.arr(lambda x: g(f(x)))
+            cls.arrow(lambda x: x) == cls.id()
+            cls.arrow(g).compose(cls.arrow(f)) == cls.arrow(lambda x: g(f(x)))
 
         Args:
             f (Callable[[A], B]): A pure function.

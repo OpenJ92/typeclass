@@ -1,3 +1,4 @@
+from typeclass.syntax.value import Value
 from typeclass.syntax.functor import Map 
 from typeclass.syntax.applicative import Ap, Pure
 from typeclass.syntax.alternative import Otherwise, Empty, Some, Many
@@ -8,6 +9,7 @@ from typeclass.syntax.groupoid import Invert
 from typeclass.syntax.semigroup import Combine
 from typeclass.syntax.monoid import MEmpty
 from typeclass.syntax.group import Inverse
+from typeclass.syntax.arrow import Arr, First, Split, Fanout
 
 from typeclass.data.thunk import Thunk
 
@@ -93,7 +95,44 @@ def interpret(free, cofree, env):
             fab = interpret(fab.force(), None, None).force()
 
             return Thunk(lambda: fab.inverse())
+
+        case Arr(cls, fab):
+            return Thunk(lambda: cls.arrow(fab))
+
+        case First(aab):
+            aab = interpret(aab.force(), None, None).force()
+            return Thunk(lambda: aab.first())
+
+        case Split(aab, acd):
+            def swap(pair):
+                x, y = pair
+                return (y, x)
+
+            aab = interpret(aab.force(), None, None).force()
+
+            arrswap = Thunk(lambda: Arr(type(aab), Thunk(lambda: swap)))
+            faab = Thunk(lambda: First(Thunk(lambda: Value(aab))))
+            facd = Thunk(lambda: First(acd))
+            one = Thunk(lambda: Compose(faab, arrswap))
+            two = Thunk(lambda: Compose(one, facd))
+            comp = Compose(two, arrswap)
+
+            return Thunk(lambda: interpret(comp, None, None).force())
+
+        case Fanout(aab, aac):
+            def duplicate(a):
+                return (a, a)
             
+            aab = interpret(aab.force(), None, None).force()
+
+            arrduplicate = Thunk(lambda: Arr(type(aab), Thunk(lambda: duplicate)))
+            split = Thunk(lambda: Split(Thunk(lambda: Value(aab)), aac))
+            comp = Compose(split, arrduplicate)
+
+            return Thunk(lambda: interpret(comp, None, None).force())
+
+        case Value(value):
+            return Thunk(lambda: value)
         case _:
             return Thunk(lambda: free)
 
