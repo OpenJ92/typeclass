@@ -9,6 +9,7 @@ from typeclass.syntax.groupoid import invert
 from typeclass.syntax.semigroup import combine
 from typeclass.syntax.monoid import mempty
 from typeclass.syntax.group import inverse
+from typeclass.syntax.arrow import arrow, first, split, fanout
 
 fmap    = Infix(fmap)
 replace = Infix(replace)
@@ -28,3 +29,6 @@ rkleisli = Infix(rkleisli)
 compose = Infix(compose)
 rcompose = Infix(rcompose)
 combine = Infix(combine)
+arrow = Infix(arrow)
+split = Infix(split)
+fanout = Infix(fanout)
