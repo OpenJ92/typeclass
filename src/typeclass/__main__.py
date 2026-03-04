@@ -164,13 +164,27 @@ if __name__ == "__main__":
     result = interpret(free, None, None).force()
     print(f"{result(10)} == (12,12)", result(10) == (12,12))
 
-    free = (endo |split| endo |split| Endomorphism(right)) |compose| (endo |fanout| endo |fanout| endo)
-    result = interpret(free, None, None).force()
+    def add(pair):
+        pair, x = pair
+        if isinstance(pair, int):
+            return pair + x
+        return x + add(pair)
+
+    def flatten(pair):
+        pair, x = pair
+        if isinstance(pair, tuple):
+            return (*flatten(pair), x)
+        return (pair, x)
+
+    free = (Morphism |arrow| flatten)                                  \
+         |compose| (endo |split| endo |split| Endomorphism(right)) \
+         |compose| (endo |fanout| endo |fanout| endo)
+    result_ = interpret(free, None, None).force()
     print(f"{result(10)} == ((12,12), 10)", result(10) == ((12,12),10))
 
-
-    free =         (endo |split|  endo |split|  Endomorphism(right) |split|  auto) \
-         |compose| (endo |split|  endo |split|  Endomorphism(right) |split|  ainv) \
-         |compose| (endo |split|  endo |split|  endo                |split|  auto) \
-         |compose| (endo |fanout| endo |fanout| endo                |fanout| ainv)              
-    result = interpret(free, None, None).force()
+    deep = Morphism |arrow| flatten \
+         |compose| (endo |split|  endo |split|  endo |split|  endo) \
+         |compose| (endo |split|  endo |split|  endo |split|  endo) \
+         |compose| (endo |split|  endo |split|  endo |split|  endo) \
+         |compose| (endo |fanout| endo |fanout| endo |fanout| endo)              
+    result = interpret(deep, None, None).force()
