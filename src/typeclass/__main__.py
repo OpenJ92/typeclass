@@ -7,9 +7,11 @@ if __name__ == "__main__":
     from typeclass.data.endomorphism import Endomorphism
     from typeclass.data.isomorphism import Isomorphism
     from typeclass.data.automorphism import Automorphism
+    from typeclass.data.either import Left, Right
     from typeclass.syntax.applicative import pure, liftA2
     from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
-    compose, rcompose, identity, invert, combine, mempty, inverse, arrow, first, split, fanout
+    compose, rcompose, identity, invert, combine, mempty, inverse, arrow, first, second, split, fanout, \
+    left, right, plusplus, oror
     from typeclass.interpret.interpreter import interpret
 
     free = Just(10) |fmap| (lambda x: x + 5)
@@ -123,10 +125,10 @@ if __name__ == "__main__":
     print(f"{fresult} == {bresult}", fresult == bresult)
 
     function = lambda x: lambda y: x + y
-    left  = (Morphism(function(1)) |compose| Morphism(function(2))) |compose| Morphism(function(3))
-    right = Morphism(function(1)) |compose| (Morphism(function(2)) |compose| Morphism(function(3)))
-    lresult = interpret(left, None, None).force()(10)
-    rresult = interpret(right, None, None).force()(10)
+    _left  = (Morphism(function(1)) |compose| Morphism(function(2))) |compose| Morphism(function(3))
+    _right = Morphism(function(1)) |compose| (Morphism(function(2)) |compose| Morphism(function(3)))
+    lresult = interpret(_left, None, None).force()(10)
+    rresult = interpret(_right, None, None).force()(10)
     print(f"{lresult} == {rresult}", lresult == rresult)
 
     from math import sqrt
@@ -136,13 +138,13 @@ if __name__ == "__main__":
     result = interpret(free, None, None).force()
     print(result(0), result(0) == 0)
 
-    left = lambda x: x + 1
-    right = lambda x: x - 1
-    endo = Endomorphism(left) |combine| Endomorphism(right)
+    _left = lambda x: x + 1
+    _right = lambda x: x - 1
+    endo = Endomorphism(_left) |combine| Endomorphism(_right)
     result = interpret(endo, None, None).force()
     print(result(0), result(0) == 0)
 
-    endo = Endomorphism(left)
+    endo = Endomorphism(_left)
     identity = mempty(Endomorphism)
     forward = endo |combine| identity
     backward = identity |combine| endo
@@ -177,7 +179,7 @@ if __name__ == "__main__":
         return (pair, x)
 
     free = (Morphism |arrow| flatten)                                  \
-         |compose| (endo |split| endo |split| Endomorphism(right)) \
+         |compose| (endo |split| endo |split| Endomorphism(_right)) \
          |compose| (endo |fanout| endo |fanout| endo)
     result_ = interpret(free, None, None).force()
     print(f"{result(10)} == ((12,12), 10)", result(10) == ((12,12),10))
@@ -188,3 +190,106 @@ if __name__ == "__main__":
          |compose| (endo |split|  endo |split|  endo |split|  endo) \
          |compose| (endo |fanout| endo |fanout| endo |fanout| endo)              
     result = interpret(deep, None, None).force()
+
+    inc = Morphism(lambda x: x + 1)
+
+    free = second(inc)
+    result = interpret(free, None, None).force()((10, 20))
+    print(result, result == (10, 21))
+
+    # second composed with first
+    free = (first(inc)) |compose| free
+    result = interpret(free, None, None).force()((10, 20))
+    # first:  (10,20) -> (11,20)
+    # second: (11,20) -> (11,21)
+    print(result, result == (11, 21))
+
+    inc = Morphism(lambda x: x + 1)
+
+    free = left(inc)
+    run = interpret(free, None, None).force()
+    print(run(Left(10)),  run(Left(10))  == Left(11))
+    print(run(Right("x")), run(Right("x")) == Right("x"))
+
+    free = right(inc)
+    run = interpret(free, None, None).force()
+    print(run(Left("x")),  run(Left("x"))  == Left("x"))
+    print(run(Right(10)),  run(Right(10))  == Right(11))
+
+        # --- ArrowChoice +++ example ---
+    inc = Morphism(lambda x: x + 1)
+    dbl = Morphism(lambda x: 2 * x)
+
+    free = inc |plusplus| dbl
+    run = interpret(free, None, None).force()
+
+    print(run(Left(10)),   run(Left(10))   == Left(11))   # Left branch uses inc
+    print(run(Right(10)),  run(Right(10))  == Right(20))  # Right branch uses dbl
+
+        # --- ArrowChoice ||| (oror) example ---
+    inc = Morphism(lambda x: x + 1)
+    dbl = Morphism(lambda x: 2 * x)
+
+    free = inc |oror| dbl
+    run = interpret(free, None, None).force()
+
+    print(run(Left(10)),   run(Left(10))   == 11)  # Left branch returns B
+    print(run(Right(10)),  run(Right(10))  == 20)  # Right branch returns B
+
+        # --- Stop-or-continue shape: Either drives branching ---
+    # Left means "done", Right means "continue"; oror chooses.
+    done = Morphism(lambda x: x)            # B -> B
+    cont = Morphism(lambda x: x + 1000)     # A -> B (just to show different path)
+
+    free = done |oror| cont
+    run = interpret(free, None, None).force()
+    print(run(Left(7)),   run(Left(7))   == 7)
+    print(run(Right(7)),  run(Right(7))  == 1007)
+
+    inc    = Morphism(lambda x: x + 1)
+    times3 = Morphism(lambda x: x * 3)
+    sq     = Morphism(lambda x: x * x)
+    strlen = Morphism(lambda s: len(s))
+    
+    # Left branch:  int -> (x+1) -> (*3)
+    left_prog  =  times3 |compose| inc
+    
+    # Right branch: str -> len -> square
+    right_prog = sq |compose| strlen 
+    
+    # Route: Either[int, str] -> Either[int, int]
+    routed = left_prog |plusplus| right_prog
+
+    run_routed = interpret(routed, None, None).force()
+    print("routed Left:", run_routed(Left(10)))
+    print("routed Right:", run_routed(Right("hi")))
+    
+    # Collapse: Either[int, int] -> int via oror (id ||| id)
+    id_int = Morphism(lambda x: x)
+    free = (id_int |oror| id_int) |compose| routed  
+    
+    run = interpret(free, None, None).force()
+    
+    print(run(Left(10)), run(Left(10)) == 33)          # (10+1)*3 = 33
+    print(run(Right("hi")), run(Right("hi")) == 4)     # len=2, sq=4
+    print(run(Right("abcd")), run(Right("abcd")) == 16)
+
+    inc   = Morphism(lambda x: x + 1)
+    dbl   = Morphism(lambda x: 2 * x)
+    upper = Morphism(lambda s: s.upper())
+    
+    tagL  = Morphism(lambda n: f"L:{n}")
+    tagRL = Morphism(lambda s: f"RL:{s}")
+    tagRR = Morphism(lambda n: f"RR:{n}")
+    
+    # inner : Either[str, int] -> str
+    inner = (upper |rcompose| tagRL) |oror| (dbl |rcompose| tagRR)
+    
+    # whole : Either[int, Either[str, int]] -> str
+    free = (inc |rcompose| tagL) |oror| inner
+    
+    run = interpret(free, None, None).force()
+    
+    print(run(Left(10)),             run(Left(10))             == "L:11")
+    print(run(Right(Left("hi"))),    run(Right(Left("hi")))    == "RL:HI")
+    print(run(Right(Right(7))),      run(Right(Right(7)))      == "RR:14")
