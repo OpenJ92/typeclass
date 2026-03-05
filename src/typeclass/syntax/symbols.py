@@ -9,7 +9,8 @@ from typeclass.syntax.groupoid import invert
 from typeclass.syntax.semigroup import combine
 from typeclass.syntax.monoid import mempty
 from typeclass.syntax.group import inverse
-from typeclass.syntax.arrow import arrow, first, split, fanout
+from typeclass.syntax.arrow import arrow, first, second, split, fanout
+from typeclass.syntax.arrowchoice import left, right, plusplus, oror
 
 fmap    = Infix(fmap)
 replace = Infix(replace)
@@ -32,3 +33,5 @@ combine = Infix(combine)
 arrow = Infix(arrow)
 split = Infix(split)
 fanout = Infix(fanout)
+plusplus = Infix(plusplus)
+oror = Infix(oror)

@@ -14,6 +14,10 @@ class First:
     aab: Thunk[Arrow[A, B]]
 
 @dataclass
+class Second:
+    aab: Thunk[Arrow[A, B]]
+
+@dataclass
 class Split:
     aab: Thunk[Arrow[A, B]]
     acd: Thunk[Arrow[C, D]]
@@ -86,6 +90,38 @@ def first(aab):
         Arrow: An arrow representing the lifted function `A -> B`.
     """
     return First(Thunk(lambda: aab))
+
+def second(aab):
+    """
+    Apply an ArrowChoice to the `Right` branch of an Either.
+
+    Equivalent to `aab.right()`.
+
+    Constructs an arrow which runs `aab` on values wrapped in `Right`,
+    leaving `Left` values untouched.
+
+    Given:
+
+        aab : A -> B
+
+    the resulting arrow has type:
+
+        Either[C, A] -> Either[C, B]
+
+    This operation is symmetric to `left`, but applies the arrow to the
+    `Right` branch instead of the `Left` branch.
+
+    In the syntax layer this is represented as an intent node. The
+    interpreter lowers it using `left` together with `arr`-lifted
+    swapping of the Either branches.
+
+    Args:
+        aab (ArrowChoice[A, B]): Arrow applied to the Right branch.
+
+    Returns:
+        ArrowChoice: An intent node representing `right aab`.
+    """
+    return Second(Thunk(lambda: aab))
 
 def split(aab, acd):
     """
