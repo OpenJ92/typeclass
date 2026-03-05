@@ -5,6 +5,11 @@ from typing import Callable, Generic, TypeVar
 from typeclass.protocols.semigroupoid import Semigroupoid
 from typeclass.protocols.category import Category
 from typeclass.protocols.arrow import Arrow
+from typeclass.protocols.arrowchoice import ArrowChoice
+from typeclass.protocols.arrowapply import ArrowApply
+from typeclass.protocols.arrowloop import ArrowLoop
+
+from typeclass.data.either import Either, Left, Right
 
 from typeclass.data.thunk import Thunk
 
@@ -14,7 +19,7 @@ C = TypeVar("C")
 
 
 @dataclass(frozen=True)
-class Morphism(Arrow, Category, Semigroupoid, Generic[A, B]):
+class Morphism(ArrowApply, ArrowChoice, Arrow, Category, Semigroupoid, Generic[A, B]):
     """
     Base arrow A -> B.
     """
@@ -23,6 +28,8 @@ class Morphism(Arrow, Category, Semigroupoid, Generic[A, B]):
 
     def __call__(self, a: A) -> B:
         return self._run(a)
+    
+    # --- Semigroupoid / Category ---
 
     def compose(self: Morphism[B, C], other: Thunk[Morphism[A, B]]) -> Morphism[A, C]:
         def inner(a: A) -> C:
@@ -34,6 +41,8 @@ class Morphism(Arrow, Category, Semigroupoid, Generic[A, B]):
     def id(cls) -> Morphism[A, A]:
         return Morphism(lambda x: x)
 
+    # --- Arrow ---
+
     @classmethod
     def arrow(cls, f: Thunk[Callable[[A], B]]) -> Morphism[A, B]:
         return Morphism(f.force())
@@ -42,4 +51,26 @@ class Morphism(Arrow, Category, Semigroupoid, Generic[A, B]):
         def inner(pair: tuple[A, C]) -> tuple[B, C]:
             a, c = pair
             return (self(a), c)
+        return Morphism(inner)
+
+    # --- ArrowChoice ---
+
+    def left(self: Morphism[A, B]) -> Morphism[Either[A, C], Either[B, C]]:
+        def inner(e: Either[A, C]) -> Either[B, C]:
+            match e:
+                case Left(a):
+                    return Left(self(a))
+                case Right(c):
+                    return Right(c)
+
+        return Morphism(inner)
+
+    # --- ArrowApply ---
+
+    @classmethod
+    def app(cls) -> Morphism[tuple[Morphism[A, B], A], B]:
+        def inner(pair: tuple[Morphism[A, B], A]) -> B:
+            f, a = pair
+            return f(a)
+
         return Morphism(inner)

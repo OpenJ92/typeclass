@@ -9,8 +9,10 @@ from typeclass.syntax.groupoid import Invert
 from typeclass.syntax.semigroup import Combine
 from typeclass.syntax.monoid import MEmpty
 from typeclass.syntax.group import Inverse
-from typeclass.syntax.arrow import Arr, First, Split, Fanout
+from typeclass.syntax.arrow import Arr, First, Second, Split, Fanout
+from typeclass.syntax.arrowchoice import Left, Right, PlusPlus, OrOr
 
+from typeclass.data.either import Left as ELeft, Right as ERight
 from typeclass.data.thunk import Thunk
 
 def interpret(free, cofree, env):
@@ -103,20 +105,29 @@ def interpret(free, cofree, env):
             aab = interpret(aab.force(), None, None).force()
             return Thunk(lambda: aab.first())
 
-        case Split(aab, acd):
+        case Second(aab):
             def swap(pair):
                 x, y = pair
                 return (y, x)
 
-            aab = interpret(aab.force(), None, None).force()
+            aab_v = interpret(aab.force(), None, None).force()
+            cls = type(aab_v)
 
-            arrswap = Thunk(lambda: Arr(type(aab), Thunk(lambda: swap)))
-            faab = Thunk(lambda: First(Thunk(lambda: Value(aab))))
-            facd = Thunk(lambda: First(acd))
-            one = Thunk(lambda: Compose(faab, arrswap))
-            two = Thunk(lambda: Compose(one, facd))
-            comp = Compose(two, arrswap)
+            arrswap = Thunk(lambda: Arr(cls, Thunk(lambda: swap)))
+            first   = Thunk(lambda: First(Thunk(lambda: Value(aab_v))))
 
+            one  = Thunk(lambda: Compose(first, arrswap))
+            comp = Compose(arrswap, one)
+
+            return Thunk(lambda: interpret(comp, None, None).force())
+
+        case Split(aab, acd):
+            aab_v = interpret(aab.force(), None, None).force()
+
+            first_  = Thunk(lambda: First(Thunk(lambda: Value(aab_v))))
+            second_ = Thunk(lambda: Second(acd))
+
+            comp = Compose(second_, first_)
             return Thunk(lambda: interpret(comp, None, None).force())
 
         case Fanout(aab, aac):
@@ -129,6 +140,52 @@ def interpret(free, cofree, env):
             split = Thunk(lambda: Split(Thunk(lambda: Value(aab)), aac))
             comp = Compose(split, arrduplicate)
 
+            return Thunk(lambda: interpret(comp, None, None).force())
+
+        case Left(aab):
+            aab = interpret(aab.force(), None, None).force()
+            return Thunk(lambda: aab.left())
+
+        case Right(aab):
+            def swap(e):
+                match e:
+                    case ELeft(x):
+                        return ERight(x)
+                    case ERight(x):
+                        return ELeft(x)
+
+            aab_v = interpret(aab.force(), None, None).force()
+            cls = type(aab_v)
+
+            arrswap = Thunk(lambda: Arr(cls, Thunk(lambda: swap)))
+            left_   = Thunk(lambda: Left(Thunk(lambda: Value(aab_v))))
+
+            one  = Thunk(lambda: Compose(left_, arrswap))
+            comp = Compose(arrswap, one)
+
+            return Thunk(lambda: interpret(comp, None, None).force())
+
+        case PlusPlus(aab, acd):
+            left_  = Thunk(lambda: Left(aab))
+            right_ = Thunk(lambda: Right(acd))
+            comp   = Compose(right_, left_)
+            return Thunk(lambda: interpret(comp, None, None).force())
+
+        case OrOr(aab, acb):
+            def merge(e):
+                match e:
+                    case ELeft(b):
+                        return b
+                    case ERight(b):
+                        return b
+
+            aab_v = interpret(aab.force(), None, None).force()
+            cls = type(aab_v)
+
+            ppg = Thunk(lambda: PlusPlus(Thunk(lambda: Value(aab_v)), acb))
+            arrmerge = Thunk(lambda: Arr(cls, Thunk(lambda: merge)))
+
+            comp = Compose(arrmerge, ppg)
             return Thunk(lambda: interpret(comp, None, None).force())
 
         case Value(value):
