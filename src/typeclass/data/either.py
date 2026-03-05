@@ -1,21 +1,17 @@
+from dataclasses import dataclass
 from typing import Generic, TypeVar
 
 A = TypeVar("A")
 B = TypeVar("B")
 
+@dataclass(frozen=True)
 class Either(Generic[A, B]):
     pass
 
+@dataclass(frozen=True)
 class Left(Either[A, B]):
-    def __init__(self, value: A):
-        self.value = value
+    value: A
 
-    def __repr__(self):
-        return f"Left({self.value})"
-
+@dataclass(frozen=True)
 class Right(Either[A, B]):
-    def __init__(self, value: B):
-        self.value = value
-
-    def __repr__(self):
-        return f"Right({self.value})"
+    value: B
