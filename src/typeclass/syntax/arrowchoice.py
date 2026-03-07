@@ -12,26 +12,30 @@ D = TypeVar("D")
 
 @dataclass
 class Left:
+    cls: type
     aab: Thunk[ArrowChoice[A, B]]
 
 @dataclass
 class Right:
+    cls: type
     aab: Thunk[ArrowChoice[A, B]]
 
 
 @dataclass
 class PlusPlus:
+    cls: type
     aab: Thunk[ArrowChoice[A, B]]
     acd: Thunk[ArrowChoice[C, D]]
 
 
 @dataclass
 class OrOr:
+    cls: type
     aab: Thunk[ArrowChoice[A, B]]
     acb: Thunk[ArrowChoice[C, B]]
 
 
-def left(aab):
+def left(cls, aab):
     """
     Apply an ArrowChoice to the `Left` branch of an Either.
 
@@ -58,9 +62,9 @@ def left(aab):
     Returns:
         ArrowChoice: An intent node representing `left aab`.
     """
-    return Left(Thunk(lambda: aab))
+    return Left(cls, Thunk(lambda: aab))
 
-def right(aab):
+def right(cls, aab):
     """
     Apply an ArrowChoice to the `Right` branch of an Either.
 
@@ -90,10 +94,10 @@ def right(aab):
     Returns:
         ArrowChoice: An intent node representing `right aab`.
     """
-    return Right(Thunk(lambda: aab))
+    return Right(cls, Thunk(lambda: aab))
 
 
-def plusplus(aab, acd):
+def plusplus(aab, clsacd):
     """
     Route over Either in parallel (written `+++`).
 
@@ -119,10 +123,11 @@ def plusplus(aab, acd):
     Returns:
         ArrowChoice: An intent node representing `aab +++ acd`.
     """
-    return PlusPlus(Thunk(lambda: aab), Thunk(lambda: acd))
+    cls, acd = clsacd
+    return PlusPlus(cls, Thunk(lambda: aab), Thunk(lambda: acd))
 
 
-def oror(aab, acb):
+def oror(aab, clsacb):
     """
     Fan-in / case analysis over Either (written `|||`), named `oror`.
 
@@ -148,4 +153,5 @@ def oror(aab, acb):
     Returns:
         ArrowChoice: An intent node representing `aab ||| acb`.
     """
-    return OrOr(Thunk(lambda: aab), Thunk(lambda: acb))
+    cls, acb = clsacb
+    return OrOr(cls, Thunk(lambda: aab), Thunk(lambda: acb))
