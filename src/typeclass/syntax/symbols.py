@@ -11,6 +11,7 @@ from typeclass.syntax.monoid import mempty
 from typeclass.syntax.group import inverse
 from typeclass.syntax.arrow import arrow, first, second, split, fanout
 from typeclass.syntax.arrowchoice import left, right, plusplus, oror
+from typeclass.syntax.arrowapply import apply
 
 fmap    = Infix(fmap)
 replace = Infix(replace)
@@ -33,5 +34,7 @@ combine = Infix(combine)
 arrow = Infix(arrow)
 split = Infix(split)
 fanout = Infix(fanout)
+left = Infix(left)
+right = Infix(right)
 plusplus = Infix(plusplus)
 oror = Infix(oror)
