@@ -3,7 +3,7 @@ if __name__ == "__main__":
     from typeclass.data.maybe import Maybe, Just, Nothing
     from typeclass.data.parser import Parser
     from typeclass.data.reader import Reader
-    from typeclass.data.morphism import Morphism
+    from typeclass.data.morphism import Morphism as M
     from typeclass.data.endomorphism import Endomorphism
     from typeclass.data.isomorphism import Isomorphism
     from typeclass.data.automorphism import Automorphism
@@ -109,24 +109,24 @@ if __name__ == "__main__":
     result = interpret(free, None, None).force().run(10)
     print(result, result == (10,20))
 
-    free = Morphism(lambda x: x + 1) |compose| Morphism(lambda y: y * y)
+    free = M(lambda x: x + 1) |compose| M(lambda y: y * y)
     result = interpret(free, None, None).force()(10)
     print(result, result == 101)
 
-    free = Morphism(lambda x: x * x) |rcompose| Morphism(lambda y: y + 1)
+    free = M(lambda x: x * x) |rcompose| M(lambda y: y + 1)
     result = interpret(free, None, None).force()(10)
     print(result, result == 101)
 
     function = lambda x: x + 1
-    forward  = identity(Morphism) |compose| Morphism(function)
-    backward = Morphism(function) |compose| identity(Morphism)
+    forward  = identity(M) |compose| M(function)
+    backward = M(function) |compose| identity(M)
     fresult = interpret(forward, None, None).force()(10)
     bresult = interpret(backward, None, None).force()(10)
     print(f"{fresult} == {bresult}", fresult == bresult)
 
     function = lambda x: lambda y: x + y
-    _left  = (Morphism(function(1)) |compose| Morphism(function(2))) |compose| Morphism(function(3))
-    _right = Morphism(function(1)) |compose| (Morphism(function(2)) |compose| Morphism(function(3)))
+    _left  = (M(function(1)) |compose| M(function(2))) |compose| M(function(3))
+    _right = M(function(1)) |compose| (M(function(2)) |compose| M(function(3)))
     lresult = interpret(_left, None, None).force()(10)
     rresult = interpret(_right, None, None).force()(10)
     print(f"{lresult} == {rresult}", lresult == rresult)
@@ -178,20 +178,20 @@ if __name__ == "__main__":
             return (*flatten(pair), x)
         return (pair, x)
 
-    free = (Morphism |arrow| flatten)                                  \
+    free = (M |arrow| flatten)                                      \
          |compose| (endo |split| endo |split| Endomorphism(_right)) \
          |compose| (endo |fanout| endo |fanout| endo)
     result_ = interpret(free, None, None).force()
-    print(f"{result(10)} == ((12,12), 10)", result(10) == ((12,12),10))
+    print(f"{result_(10)} == ((12,12), 10)", result_(10) == (12,12,10))
 
-    deep = Morphism |arrow| flatten \
+    deep = M |arrow| flatten \
          |compose| (endo |split|  endo |split|  endo |split|  endo) \
          |compose| (endo |split|  endo |split|  endo |split|  endo) \
          |compose| (endo |split|  endo |split|  endo |split|  endo) \
          |compose| (endo |fanout| endo |fanout| endo |fanout| endo)              
     result = interpret(deep, None, None).force()
 
-    inc = Morphism(lambda x: x + 1)
+    inc = M(lambda x: x + 1)
 
     free = second(inc)
     result = interpret(free, None, None).force()((10, 20))
@@ -204,33 +204,33 @@ if __name__ == "__main__":
     # second: (11,20) -> (11,21)
     print(result, result == (11, 21))
 
-    inc = Morphism(lambda x: x + 1)
+    inc = M(lambda x: x + 1)
 
-    free = Morphism |left| inc
+    free = M |left| inc
     run = interpret(free, None, None).force()
     print(run(Left(10)),  run(Left(10))  == Left(11))
     print(run(Right("x")), run(Right("x")) == Right("x"))
 
-    free = Morphism |right| inc
+    free = M |right| inc
     run = interpret(free, None, None).force()
     print(run(Left("x")),  run(Left("x"))  == Left("x"))
     print(run(Right(10)),  run(Right(10))  == Right(11))
 
         # --- ArrowChoice +++ example ---
-    inc = Morphism(lambda x: x + 1)
-    dbl = Morphism(lambda x: 2 * x)
+    inc = M(lambda x: x + 1)
+    dbl = M(lambda x: 2 * x)
 
-    free = inc |plusplus| (Morphism, dbl)
+    free = inc |plusplus| (M, dbl)
     run = interpret(free, None, None).force()
 
     print(run(Left(10)),   run(Left(10))   == Left(11))   # Left branch uses inc
     print(run(Right(10)),  run(Right(10))  == Right(20))  # Right branch uses dbl
 
         # --- ArrowChoice ||| (oror) example ---
-    inc = Morphism(lambda x: x + 1)
-    dbl = Morphism(lambda x: 2 * x)
+    inc = M(lambda x: x + 1)
+    dbl = M(lambda x: 2 * x)
 
-    free = inc |oror| (Morphism, dbl)
+    free = inc |oror| (M, dbl)
     run = interpret(free, None, None).force()
 
     print(run(Left(10)),   run(Left(10))   == 11)  # Left branch returns B
@@ -238,18 +238,18 @@ if __name__ == "__main__":
 
         # --- Stop-or-continue shape: Either drives branching ---
     # Left means "done", Right means "continue"; oror chooses.
-    done = Morphism(lambda x: x)            # B -> B
-    cont = Morphism(lambda x: x + 1000)     # A -> B (just to show different path)
+    done = M(lambda x: x)            # B -> B
+    cont = M(lambda x: x + 1000)     # A -> B (just to show different path)
 
-    free = done |oror| (Morphism, cont)
+    free = done |oror| (M, cont)
     run = interpret(free, None, None).force()
     print(run(Left(7)),   run(Left(7))   == 7)
     print(run(Right(7)),  run(Right(7))  == 1007)
 
-    inc    = Morphism(lambda x: x + 1)
-    times3 = Morphism(lambda x: x * 3)
-    sq     = Morphism(lambda x: x * x)
-    strlen = Morphism(lambda s: len(s))
+    inc    = M(lambda x: x + 1)
+    times3 = M(lambda x: x * 3)
+    sq     = M(lambda x: x * x)
+    strlen = M(lambda s: len(s))
     
     # Left branch:  int -> (x+1) -> (*3)
     left_prog  =  times3 |compose| inc
@@ -258,15 +258,15 @@ if __name__ == "__main__":
     right_prog = sq |compose| strlen 
     
     # Route: Either[int, str] -> Either[int, int]
-    routed = left_prog |plusplus| (Morphism, right_prog)
+    routed = left_prog |plusplus| (M, right_prog)
 
     run_routed = interpret(routed, None, None).force()
     print("routed Left:", run_routed(Left(10)))
     print("routed Right:", run_routed(Right("hi")))
     
     # Collapse: Either[int, int] -> int via oror (id ||| id)
-    id_int = Morphism(lambda x: x)
-    free = (id_int |oror| (Morphism, id_int)) |compose| routed  
+    id_int = M(lambda x: x)
+    free = (id_int |oror| (M, id_int)) |compose| routed  
     
     run = interpret(free, None, None).force()
     
@@ -274,19 +274,19 @@ if __name__ == "__main__":
     print(run(Right("hi")), run(Right("hi")) == 4)     # len=2, sq=4
     print(run(Right("abcd")), run(Right("abcd")) == 16)
 
-    inc   = Morphism(lambda x: x + 1)
-    dbl   = Morphism(lambda x: 2 * x)
-    upper = Morphism(lambda s: s.upper())
+    inc   = M(lambda x: x + 1)
+    dbl   = M(lambda x: 2 * x)
+    upper = M(lambda s: s.upper())
     
-    tagL  = Morphism(lambda n: f"L:{n}")
-    tagRL = Morphism(lambda s: f"RL:{s}")
-    tagRR = Morphism(lambda n: f"RR:{n}")
+    tagL  = M(lambda n: f"L:{n}")
+    tagRL = M(lambda s: f"RL:{s}")
+    tagRR = M(lambda n: f"RR:{n}")
     
     # inner : Either[str, int] -> str
-    inner = (upper |rcompose| tagRL) |oror| (Morphism, (dbl |rcompose| tagRR))
+    inner = (upper |rcompose| tagRL) |oror| (M, (dbl |rcompose| tagRR))
     
     # whole : Either[int, Either[str, int]] -> str
-    free = (inc |rcompose| tagL) |oror| (Morphism, inner)
+    free = (inc |rcompose| tagL) |oror| (M, inner)
 
     run = interpret(free, None, None).force()
     
@@ -297,8 +297,8 @@ if __name__ == "__main__":
         # --- Stop-or-continue with self-reference on the Right branch ---
     # Left means done. Right means continue by feeding back into the same graph.
 
-    done = Morphism(lambda x: x + 100)   # easy-to-see terminal action
-    free = done |plusplus| (Morphism, Thunk(lambda: free))
+    done = M(lambda x: x + 100)   # easy-to-see terminal action
+    free = done |plusplus| (M, free)
 
     run = interpret(free, None, None).force()
 
@@ -307,3 +307,11 @@ if __name__ == "__main__":
     # This is the recursive path.
     # It should keep re-entering the same expression if knot-tying worked.
     # print("gated recursive Right:", run(Right(7)))
+    step = M(lambda n: Left(n) if n <= 0 else Right(n - 1))
+    done = M(lambda n: n + 100)
+    
+    base = step |oror| (M, M(lambda n: n))
+    
+    run_base = interpret(base, None, None).force()
+    print(run_base(Left(10)))    # 0
+    print(run_base(Right(30)))   # 3

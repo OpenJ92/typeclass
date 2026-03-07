@@ -18,10 +18,13 @@ class Thunk(Alternative, Applicative, Functor, Generic[T]):
         self._value: T | None = None
 
     def force(self) -> T:
-        value = self._thunk()
-        while isinstance(value, Thunk):
-            value = value.force()
-        return value
+        if not self._evaluated:
+            value = self._thunk()
+            while isinstance(value, Thunk):
+                value = value.force()
+            self._value = value
+            self._evaluated = True
+        return self._value
 
     def __repr__(self):
         return f"Thunk({self._value!r})" if self._evaluated else "Thunk(<unevaluated>)"
