@@ -11,7 +11,7 @@ if __name__ == "__main__":
     from typeclass.syntax.applicative import pure, liftA2
     from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
     compose, rcompose, identity, invert, combine, mempty, inverse, arrow, first, second, split, fanout, \
-    left, right, plusplus, oror
+    left, right, plusplus, oror, apply
     from typeclass.interpret.interpreter import interpret
 
     free = Just(10) |fmap| (lambda x: x + 5)
@@ -206,12 +206,12 @@ if __name__ == "__main__":
 
     inc = Morphism(lambda x: x + 1)
 
-    free = left(inc)
+    free = Morphism |left| inc
     run = interpret(free, None, None).force()
     print(run(Left(10)),  run(Left(10))  == Left(11))
     print(run(Right("x")), run(Right("x")) == Right("x"))
 
-    free = right(inc)
+    free = Morphism |right| inc
     run = interpret(free, None, None).force()
     print(run(Left("x")),  run(Left("x"))  == Left("x"))
     print(run(Right(10)),  run(Right(10))  == Right(11))
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     inc = Morphism(lambda x: x + 1)
     dbl = Morphism(lambda x: 2 * x)
 
-    free = inc |plusplus| dbl
+    free = inc |plusplus| (Morphism, dbl)
     run = interpret(free, None, None).force()
 
     print(run(Left(10)),   run(Left(10))   == Left(11))   # Left branch uses inc
@@ -230,7 +230,7 @@ if __name__ == "__main__":
     inc = Morphism(lambda x: x + 1)
     dbl = Morphism(lambda x: 2 * x)
 
-    free = inc |oror| dbl
+    free = inc |oror| (Morphism, dbl)
     run = interpret(free, None, None).force()
 
     print(run(Left(10)),   run(Left(10))   == 11)  # Left branch returns B
@@ -241,7 +241,7 @@ if __name__ == "__main__":
     done = Morphism(lambda x: x)            # B -> B
     cont = Morphism(lambda x: x + 1000)     # A -> B (just to show different path)
 
-    free = done |oror| cont
+    free = done |oror| (Morphism, cont)
     run = interpret(free, None, None).force()
     print(run(Left(7)),   run(Left(7))   == 7)
     print(run(Right(7)),  run(Right(7))  == 1007)
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     right_prog = sq |compose| strlen 
     
     # Route: Either[int, str] -> Either[int, int]
-    routed = left_prog |plusplus| right_prog
+    routed = left_prog |plusplus| (Morphism, right_prog)
 
     run_routed = interpret(routed, None, None).force()
     print("routed Left:", run_routed(Left(10)))
@@ -266,7 +266,7 @@ if __name__ == "__main__":
     
     # Collapse: Either[int, int] -> int via oror (id ||| id)
     id_int = Morphism(lambda x: x)
-    free = (id_int |oror| id_int) |compose| routed  
+    free = (id_int |oror| (Morphism, id_int)) |compose| routed  
     
     run = interpret(free, None, None).force()
     
@@ -283,13 +283,27 @@ if __name__ == "__main__":
     tagRR = Morphism(lambda n: f"RR:{n}")
     
     # inner : Either[str, int] -> str
-    inner = (upper |rcompose| tagRL) |oror| (dbl |rcompose| tagRR)
+    inner = (upper |rcompose| tagRL) |oror| (Morphism, (dbl |rcompose| tagRR))
     
     # whole : Either[int, Either[str, int]] -> str
-    free = (inc |rcompose| tagL) |oror| inner
-    
+    free = (inc |rcompose| tagL) |oror| (Morphism, inner)
+
     run = interpret(free, None, None).force()
     
     print(run(Left(10)),             run(Left(10))             == "L:11")
     print(run(Right(Left("hi"))),    run(Right(Left("hi")))    == "RL:HI")
     print(run(Right(Right(7))),      run(Right(Right(7)))      == "RR:14")
+
+        # --- Stop-or-continue with self-reference on the Right branch ---
+    # Left means done. Right means continue by feeding back into the same graph.
+
+    done = Morphism(lambda x: x + 100)   # easy-to-see terminal action
+    free = done |plusplus| (Morphism, Thunk(lambda: free))
+
+    run = interpret(free, None, None).force()
+
+    print("gated recursive Left:", run(Left(7)), run(Left(7)) == Left(107))
+
+    # This is the recursive path.
+    # It should keep re-entering the same expression if knot-tying worked.
+    # print("gated recursive Right:", run(Right(7)))
