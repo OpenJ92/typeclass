@@ -55,11 +55,12 @@ class Morphism(ArrowApply, ArrowChoice, Arrow, Category, Semigroupoid, Generic[A
 
     # --- ArrowChoice ---
 
-    def left(self: Morphism[A, B]) -> Morphism[Either[A, C], Either[B, C]]:
+    @classmethod
+    def left(cls, self: Morphism[A, B]) -> Morphism[Either[A, C], Either[B, C]]:
         def inner(e: Either[A, C]) -> Either[B, C]:
             match e:
                 case Left(a):
-                    return Left(self(a))
+                    return Left(self.force()(a))
                 case Right(c):
                     return Right(c)
 
