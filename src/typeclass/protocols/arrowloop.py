@@ -55,7 +55,8 @@ class ArrowLoop(Arrow[A, B], Protocol, Generic[A, B]):
         (where the feedback is lazily demanded) or rejects/guards others.
     """
 
-    def loop(self: ArrowLoop[tuple[A, C], tuple[B, C]]) -> ArrowLoop[A, B]:
+    @classmethod
+    def loop(cls, self: ArrowLoop[tuple[A, C], tuple[B, C]]) -> ArrowLoop[A, B]:
         """
         Tie a feedback loop on the second component.
 

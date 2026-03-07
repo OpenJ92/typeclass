@@ -27,6 +27,7 @@ class ArrowApply(Arrow[A, B], Protocol, Generic[A, B]):
 
     Semantics of `app`:
         app((f, a)) = f(a)
+
     but crucially this happens *inside* the Arrow instance, so `f` is an Arrow,
     not a raw Python function.
 
