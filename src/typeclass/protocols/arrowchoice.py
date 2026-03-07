@@ -73,7 +73,8 @@ class ArrowChoice(Arrow[A, B], Protocol, Generic[A, B]):
         the runtime tag (Left/Right).
     """
 
-    def left(self: ArrowChoice[A, B]) -> ArrowChoice[Either[A, C], Either[B, C]]:
+    @classmethod
+    def left(cls, self: ArrowChoice[A, B]) -> ArrowChoice[Either[A, C], Either[B, C]]:
         """
         Route this arrow down the Left branch of an Either.
 
@@ -82,53 +83,5 @@ class ArrowChoice(Arrow[A, B], Protocol, Generic[A, B]):
 
         Returns:
             ArrowChoice[Either[A, C], Either[B, C]]
-        """
-        ...
-
-    def right(self: ArrowChoice[A, B]) -> ArrowChoice[Either[C, A], Either[C, B]]:
-        """
-        Route this arrow down the Right branch of an Either.
-
-            right(f)(Right(a)) == Right(f(a))
-            right(f)(Left(c))  == Left(c)
-
-        Returns:
-            ArrowChoice[Either[C, A], Either[C, B]]
-        """
-        ...
-
-    # ---- Optional derived helpers (recommended surface) ----
-
-    def plusplus(
-        self: ArrowChoice[A, B],
-        other: ArrowChoice[C, D],
-    ) -> ArrowChoice[Either[A, C], Either[B, D]]:
-        """
-        Choice split (often written `+++`).
-
-            (f +++ g)(Left(a))  == Left(f(a))
-            (f +++ g)(Right(c)) == Right(g(c))
-
-        Typical definition (conceptually):
-            f +++ g = left(f) >>> right(g)
-        (exact expression depends on your available primitives).
-
-        Returns:
-            ArrowChoice[Either[A, C], Either[B, D]]
-        """
-        ...
-
-    def oror(
-        self: ArrowChoice[A, B],
-        other: ArrowChoice[C, B],
-    ) -> ArrowChoice[Either[A, C], B]:
-        """
-        Fanning-in / case analysis (often written `|||`).
-
-            (f ||| g)(Left(a))  == f(a)
-            (f ||| g)(Right(c)) == g(c)
-
-        Returns:
-            ArrowChoice[Either[A, C], B]
         """
         ...
