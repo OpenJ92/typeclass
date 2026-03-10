@@ -17,8 +17,50 @@ from typeclass.data.either import Left as ELeft, Right as ERight
 from typeclass.data.thunk import Thunk
 
 def interpret(free, cofree, env):
+    """
+    Normalize a syntax tree into a delayed runtime value.
+
+    The interpreter evaluates nodes of the free syntax language and dispatches
+    them to the corresponding runtime typeclass implementations.
+
+    Execution model:
+
+        syntax node
+        → interpreter pattern match
+        → runtime method call
+        → possibly another syntax expression
+        → interpreter normalization
+        → runtime value
+
+    The interpreter is therefore *re-entrant*: implementation methods may return
+    either concrete runtime values or further syntax expressions. The interpreter
+    repeatedly normalizes until a realized value is obtained.
+
+    All results are returned wrapped in `Thunk` so evaluation remains delayed
+    until the final `.force()` boundary.
+
+    Parameters
+    ----------
+    free:
+        The syntax node being interpreted.
+
+    cofree:
+        Reserved for future extensions (e.g. annotated syntax trees).
+
+    env:
+        Reserved for environment-based interpreters.
+
+    Returns
+    -------
+    Thunk
+        A delayed runtime value.
+    """
 
     match free:
+
+        # ----- Functor ---------------------------------------------------------
+        # Implements fmap by interpreting both the function and value, then
+        # delegating to the runtime Functor implementation.
 
         case Map(function, value):
             value = interpret(value.force(), None, None).force()
@@ -29,6 +71,10 @@ def interpret(free, cofree, env):
 
             return Thunk(lambda: value.fmap(Thunk(lambda: k)))
 
+        # ----- Applicative -----------------------------------------------------
+        # Implements fmap by interpreting both the function and value, then
+        # delegating to the runtime Functor implementation.
+            
         case Pure(cls, value):
             value = interpret(value.force(), None, None).force()
             return Thunk(lambda: cls.pure(value))
@@ -37,6 +83,10 @@ def interpret(free, cofree, env):
             function = interpret(function.force(), None, None).force()
             value    = interpret(value.force(), None, None)
             return Thunk(lambda: function.ap(value))
+
+        # ----- Alternative -----------------------------------------------------
+        # Implements empty, otherwise, and the derived combinators some/many.
+        # some/many are lowered into pure/ap/otherwise expressions.
 
         case Empty(cls):
             return Thunk(lambda: cls.empty())
@@ -59,6 +109,10 @@ def interpret(free, cofree, env):
             ap   = Ap(_map, many)
             return Thunk(lambda: interpret(ap, None, None).force())
 
+        # ----- Monad -----------------------------------------------------------
+        # Implements empty, otherwise, and the derived combinators some/many.
+        # some/many are lowered into pure/ap/otherwise expressions.
+
         case Return(cls, value):
             value = interpret(value.force(), None, None).force()
             return Thunk(lambda: cls.pure(value))
@@ -72,18 +126,30 @@ def interpret(free, cofree, env):
 
             return Thunk(lambda: ma.bind(Thunk(lambda: k)))
 
+        # ----- Semigroupoid -----------------------------------------------------
+        # Sequential composition of morphisms.
+
         case Compose(fbc, fab):
             fbc = interpret(fbc.force(), None, None).force()
             fab = interpret(fab.force(), None, None)
 
             return Thunk(lambda: fbc.compose(fab))
 
+        # ----- Category ---------------------------------------------------------
+        # Identity morphism.
+
         case ID(cls):
             return Thunk(lambda: cls.id())
+
+        # ----- Groupoid ---------------------------------------------------------
+        # Identity morphism.
 
         case Invert(fab):
             fab = interpret(fab.force(), None, None).force()
             return Thunk(lambda: fab.invert())
+
+        # ----- Semigroup --------------------------------------------------------
+        # Binary associative combination.
 
         case Combine(a, b):
             a = interpret(a.force(), None, None).force()
@@ -91,57 +157,69 @@ def interpret(free, cofree, env):
 
             return Thunk(lambda: a.combine(b))
 
+        # ----- Monoid -----------------------------------------------------------
+        # Identity element for a Semigroup.
+
         case MEmpty(cls):
             return Thunk(lambda: cls.mempty())
+
+        # ----- Group ------------------------------------------------------------
+        # Inversion operation for Group structures.
 
         case Inverse(fab):
             fab = interpret(fab.force(), None, None).force()
 
             return Thunk(lambda: fab.inverse())
 
+        # ----- Arrow ------------------------------------------------------------
+        # Core Arrow operations and derived combinators expressed in terms of
+        # arr and first. Derived operations are lowered into simpler Arrow
+        # expressions and reinterpreted.
+
         case Arr(cls, fab):
-            return Thunk(lambda: cls.arrow(fab))
+            def k(a):
+                return interpret(fab.force(), None, None).force()(a)
+            return Thunk(lambda: cls.arrow(Thunk(lambda: k)))
 
-        case First(aab):
-            aab = interpret(aab.force(), None, None).force()
-            return Thunk(lambda: aab.first())
+        case First(cls, aab):
+            def k(a):
+                return interpret(aab.force(), None, None).force()(a)
+            return Thunk(lambda: cls.first(Thunk(lambda: k)))
 
-        case Second(aab):
+        case Second(cls, aab):
             def swap(pair):
                 x, y = pair
                 return (y, x)
 
-            aab_v = interpret(aab.force(), None, None).force()
-            cls = type(aab_v)
-
             arrswap = Thunk(lambda: Arr(cls, Thunk(lambda: swap)))
-            first   = Thunk(lambda: First(Thunk(lambda: Value(aab_v))))
+            first   = Thunk(lambda: First(cls, aab))
 
             one  = Thunk(lambda: Compose(first, arrswap))
             comp = Compose(arrswap, one)
 
             return Thunk(lambda: interpret(comp, None, None).force())
 
-        case Split(aab, acd):
-            aab_v = interpret(aab.force(), None, None).force()
-
-            first_  = Thunk(lambda: First(Thunk(lambda: Value(aab_v))))
-            second_ = Thunk(lambda: Second(acd))
+        case Split(cls, aab, acd):
+            first_  = Thunk(lambda: First(cls, aab))
+            second_ = Thunk(lambda: Second(cls, acd))
 
             comp = Compose(second_, first_)
             return Thunk(lambda: interpret(comp, None, None).force())
 
-        case Fanout(aab, aac):
+        case Fanout(cls, aab, aac):
             def duplicate(a):
                 return (a, a)
             
-            aab = interpret(aab.force(), None, None).force()
-
-            arrduplicate = Thunk(lambda: Arr(type(aab), Thunk(lambda: duplicate)))
-            split = Thunk(lambda: Split(Thunk(lambda: Value(aab)), aac))
+            arrduplicate = Thunk(lambda: Arr(cls, Thunk(lambda: duplicate)))
+            split = Thunk(lambda: Split(cls, aab, aac))
             comp = Compose(split, arrduplicate)
 
             return Thunk(lambda: interpret(comp, None, None).force())
+
+        # ----- ArrowChoice  -----------------------------------------------------
+        # Core Arrow operations and derived combinators expressed in terms of
+        # arr and first. Derived operations are lowered into simpler Arrow
+        # expressions and reinterpreted.
 
         case Left(cls, aab):
             def k(a):
@@ -184,11 +262,15 @@ def interpret(free, cofree, env):
             comp = Compose(arrmerge, ppg)
             return Thunk(lambda: interpret(comp, None, None).force())
 
+        # ----- ArrowApply  -----------------------------------------------------
+        # Dynamic arrow application. Allows an arrow produced at runtime to be
+        # immediately applied.
+
         case Apply(cls):
             return Thunk(lambda: interpret(cls.app(), None, None).force())
 
-        case Value(value):
-            return Thunk(lambda: value)
+        # ----- Base ------------------------------------------------------------
+        # Base case: already a runtime value.
 
         case _:
             return Thunk(lambda: free)
