@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import Callable, Generic, TypeVar
 
-from typeclass.protocol.force import Force
+from typeclass.protocols.force import Force
 
-T = TypeVar("T", bound=Functor)
+T = TypeVar("T")
 
 class Thunk(Force[T], Generic[T]):
     def __init__(self, thunk: Callable[[], T]):
