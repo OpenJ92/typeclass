@@ -6,13 +6,14 @@ from typeclass.data.sequence import Sequence, Cons, Nil, zipwith
 from typeclass.protocols.functor import Functor
 from typeclass.protocols.applicative import Applicative
 from typeclass.protocols.show import Show
+from typeclass.protocols.eq import Eq
 from typeclass.protocols.force import Force
 
 A = TypeVar("A")
 B = TypeVar("B")
 
 @dataclass(frozen=True)
-class Tree(Applicative[A], Functor[A], Show, Generic[A]):
+class Tree(Applicative[A], Functor[A], Show, Eq, Generic[A]):
     value: A
     children: Seq[Tree[A]]
 
@@ -43,3 +44,11 @@ class Tree(Applicative[A], Functor[A], Show, Generic[A]):
     def __repr__(self) -> str:
         children = ", ".join(repr(child) for child in self.children)
         return f"Tree({self.value!r}, [{children}])"
+
+    # ----- Eq --------------------------------------------------------------
+
+    def __eq__(self: Tree[A], other: Tree[A]) -> bool:
+        match (self, other):
+            case (Tree(c, cs), Tree(d, ds)):
+                return c == d and cs == cs
+
