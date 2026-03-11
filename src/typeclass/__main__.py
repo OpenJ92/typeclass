@@ -318,5 +318,16 @@ if __name__ == "__main__":
     print(run_base(Left(10)))    # 0
     print(run_base(Right(30)))   # 3
 
-    l = Sequence.from_iterable([1, 2, 3, 4, 5, 6])
+    def from_iterable(iterable):
+        """
+        Construct a Sequence from any iterable.
+
+        Elements are inserted in the same order as the iterable.
+        """
+        result = Nil()
+        for x in reversed(list(iterable)):
+            result = Cons(x, result)
+        return result
+
+    l = from_iterable([1, 2, 3, 4, 5, 6])
 
