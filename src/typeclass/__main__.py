@@ -4,10 +4,12 @@ if __name__ == "__main__":
     from typeclass.data.parser import Parser
     from typeclass.data.reader import Reader
     from typeclass.data.morphism import Morphism as M
-    from typeclass.data.endomorphism import Endomorphism
+    from typeclass.data.endomorphism import Endomorphism as E
     from typeclass.data.isomorphism import Isomorphism
     from typeclass.data.automorphism import Automorphism
     from typeclass.data.either import Left, Right
+    from typeclass.data.sequence import Sequence, Cons, Nil
+    from typeclass.data.tree import Tree
     from typeclass.syntax.applicative import pure, liftA2
     from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
     compose, rcompose, identity, invert, combine, mempty, inverse, arrow, first, second, split, fanout, \
@@ -140,12 +142,12 @@ if __name__ == "__main__":
 
     _left = lambda x: x + 1
     _right = lambda x: x - 1
-    endo = Endomorphism(_left) |combine| Endomorphism(_right)
+    endo = E(_left) |combine| E(_right)
     result = interpret(endo, None, None).force()
     print(result(0), result(0) == 0)
 
-    endo = Endomorphism(_left)
-    identity = mempty(Endomorphism)
+    endo = E(_left)
+    identity = mempty(E)
     forward = endo |combine| identity
     backward = identity |combine| endo
 
@@ -162,7 +164,7 @@ if __name__ == "__main__":
 
     print(bresult(pi), bresult(pi) == pi)
 
-    free = (endo |split| endo) |compose| (endo |fanout| endo)
+    free = (endo |split| (E, endo)) |compose| (endo |fanout| (E, endo))
     result = interpret(free, None, None).force()
     print(f"{result(10)} == (12,12)", result(10) == (12,12))
 
@@ -179,26 +181,26 @@ if __name__ == "__main__":
         return (pair, x)
 
     free = (M |arrow| flatten)                                      \
-         |compose| (endo |split| endo |split| Endomorphism(_right)) \
-         |compose| (endo |fanout| endo |fanout| endo)
+         |compose| (endo |split| (E, endo) |split| (E, E(_right))) \
+         |compose| (endo |fanout| (E, endo) |fanout| (E, endo))
     result_ = interpret(free, None, None).force()
     print(f"{result_(10)} == ((12,12), 10)", result_(10) == (12,12,10))
 
     deep = M |arrow| flatten \
-         |compose| (endo |split|  endo |split|  endo |split|  endo) \
-         |compose| (endo |split|  endo |split|  endo |split|  endo) \
-         |compose| (endo |split|  endo |split|  endo |split|  endo) \
-         |compose| (endo |fanout| endo |fanout| endo |fanout| endo)              
+         |compose| (endo |split|  (E, endo) |split|  (E, endo) |split|  (E, endo)) \
+         |compose| (endo |split|  (E, endo) |split|  (E, endo) |split|  (E, endo)) \
+         |compose| (endo |split|  (E, endo) |split|  (E, endo) |split|  (E, endo)) \
+         |compose| (endo |fanout| (E, endo) |fanout| (E, endo) |fanout| (E, endo))              
     result = interpret(deep, None, None).force()
 
     inc = M(lambda x: x + 1)
 
-    free = second(inc)
+    free = E |second| inc
     result = interpret(free, None, None).force()((10, 20))
     print(result, result == (10, 21))
 
     # second composed with first
-    free = (first(inc)) |compose| free
+    free = (E |first| inc) |compose| free
     result = interpret(free, None, None).force()((10, 20))
     # first:  (10,20) -> (11,20)
     # second: (11,20) -> (11,21)
@@ -315,3 +317,17 @@ if __name__ == "__main__":
     run_base = interpret(base, None, None).force()
     print(run_base(Left(10)))    # 0
     print(run_base(Right(30)))   # 3
+
+    def from_iterable(iterable):
+        """
+        Construct a Sequence from any iterable.
+
+        Elements are inserted in the same order as the iterable.
+        """
+        result = Nil()
+        for x in reversed(list(iterable)):
+            result = Cons(x, result)
+        return result
+
+    l = from_iterable([1, 2, 3, 4, 5, 6])
+

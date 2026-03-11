@@ -11,19 +11,23 @@ class Arr:
 
 @dataclass
 class First:
+    cls: type
     aab: Thunk[Arrow[A, B]]
 
 @dataclass
 class Second:
+    cls: type
     aab: Thunk[Arrow[A, B]]
 
 @dataclass
 class Split:
+    cls: type
     aab: Thunk[Arrow[A, B]]
     acd: Thunk[Arrow[C, D]]
 
 @dataclass
 class Fanout:
+    cls: type
     aab: Thunk[Arrow[A, B]]
     acd: Thunk[Arrow[C, D]]
 
@@ -59,71 +63,67 @@ def arrow(cls, fab):
     """
     return Arr(cls, Thunk(lambda: fab))
 
-def first(aab):
+def first(cls, aab):
     """
-    Lift a function into an Arrow.
+    Apply an Arrow to the first component of a pair.
 
-    Equivalent to `Arrow.arrow(cls, fab)`.
+    Equivalent to `Arrow.first(cls, aab)`.
 
-    Constructs an arrow from a pure function. This operation embeds
-    ordinary computation into the Arrow context.
-
-    The lifted function behaves like the underlying function under
-    composition and must satisfy the Arrow laws:
-
-        arrow(id)
-        ==
-        identity
-
-        arrow(f >>> g)
-        ==
-        compose(arrow(f), arrow(g))
-
-    where `f` and `g` are ordinary functions.
-
-    Args:
-        cls (type): The Arrow implementation in which the function
-            should be lifted.
-        fab (Callable[[A], B]): A pure function from `A` to `B`.
-
-    Returns:
-        Arrow: An arrow representing the lifted function `A -> B`.
-    """
-    return First(Thunk(lambda: aab))
-
-def second(aab):
-    """
-    Apply an ArrowChoice to the `Right` branch of an Either.
-
-    Equivalent to `aab.right()`.
-
-    Constructs an arrow which runs `aab` on values wrapped in `Right`,
-    leaving `Left` values untouched.
-
-    Given:
+    Given an arrow
 
         aab : A -> B
 
-    the resulting arrow has type:
+    `first(aab)` produces an arrow
 
-        Either[C, A] -> Either[C, B]
+        (A, C) -> (B, C)
 
-    This operation is symmetric to `left`, but applies the arrow to the
-    `Right` branch instead of the `Left` branch.
+    The first component of the pair is processed by the arrow,
+    while the second component is passed through unchanged.
 
-    In the syntax layer this is represented as an intent node. The
-    interpreter lowers it using `left` together with `arr`-lifted
-    swapping of the Either branches.
+    This is a *syntax node* representing the intent to apply an
+    Arrow to the first element of a tuple. The interpreter lowers
+    this node into the corresponding runtime Arrow implementation.
 
     Args:
-        aab (ArrowChoice[A, B]): Arrow applied to the Right branch.
+        cls (type): Arrow implementation class.
+        aab (Arrow[A, B]): Arrow applied to the first component.
 
     Returns:
-        ArrowChoice: An intent node representing `right aab`.
+        Arrow: An intent node representing `first aab`.
     """
-    return Second(Thunk(lambda: aab))
+    return First(cls, Thunk(lambda: aab))
 
-def split(aab, acd):
+def second(cls, aab):
+    """
+    Apply an Arrow to the second component of a pair.
+
+    Equivalent to `Arrow.second(cls, aab)`.
+
+    Given an arrow
+
+        aab : A -> B
+
+    `second(aab)` produces an arrow
+
+        (C, A) -> (C, B)
+
+    The second component of the pair is processed by the arrow,
+    while the first component is passed through unchanged.
+
+    In the syntax layer this is represented as an intent node.
+    The interpreter lowers this node using `first` together with
+    an `arr`-lifted swap of the pair components.
+
+    Args:
+        cls (type): Arrow implementation class.
+        aab (Arrow[A, B]): Arrow applied to the second component.
+
+    Returns:
+        Arrow: An intent node representing `second aab`.
+    """
+    return Second(cls, Thunk(lambda: aab))
+
+def split(aab, clsacd):
     """
     Parallel composition of two Arrows.
 
@@ -152,9 +152,10 @@ def split(aab, acd):
         Arrow: An arrow mapping `(A, C)` to `(B, D)` by applying
         each arrow to its corresponding component.
     """
-    return Split(Thunk(lambda: aab), Thunk(lambda: acd))
+    cls, acd = clsacd
+    return Split(cls, Thunk(lambda: aab), Thunk(lambda: acd))
 
-def fanout(aab, aac):
+def fanout(aab, clsaac):
     """
     Fanout composition of two Arrows.
 
@@ -182,4 +183,5 @@ def fanout(aab, aac):
     Returns:
         Arrow: An arrow mapping `A` to `(B, C)` containing both results.
     """
-    return Fanout(Thunk(lambda: aab), Thunk(lambda: aac))
+    cls, aac = clsaac
+    return Fanout(cls, Thunk(lambda: aab), Thunk(lambda: aac))

@@ -1,17 +1,11 @@
 from __future__ import annotations
 from typing import Callable, Generic, TypeVar
 
-from typeclass.protocols.functor import Functor
-from typeclass.protocols.applicative import Applicative
-from typeclass.protocols.alternative import Alternative
+from typeclass.protocols.force import Force
 
-A = TypeVar("A")
-B = TypeVar("B")
-T = TypeVar("T", bound=Functor)
-TF = TypeVar("TF", bound=Applicative)
-TA = TypeVar("TA", bound=Alternative)
+T = TypeVar("T")
 
-class Thunk(Alternative, Applicative, Functor, Generic[T]):
+class Thunk(Force[T], Generic[T]):
     def __init__(self, thunk: Callable[[], T]):
         self._thunk = thunk
         self._evaluated = False
