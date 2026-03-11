@@ -66,7 +66,17 @@ class Sequence(Monad[A], Alternative, Applicative[A], Functor[A], Show, Generic[
     # ----- Show ------------------------------------------------------------
 
     def __repr__(self) -> str:
-        return f"Sequence({self.to_list()!r})"
+        return f"Sequence({list(iter(self))!r})"
+
+    # ----- Eq ------------------------------------------------------------
+
+    def __eq__(self: Sequence[A], other: Sequence[A]) -> bool:
+        case (self, other):
+            match (Cons(x, xs), Cons(y, ys)):
+                return True and xs == ys
+            match _:
+                return False
+            return True
 
     # ----- Convenience -----------------------------------------------------
 
