@@ -11,7 +11,7 @@ from typeclass.protocols.arrowloop import ArrowLoop
 
 from typeclass.data.either import Either, Left, Right
 
-from typeclass.data.thunk import Thunk
+from typeclass.protocols.force import Force
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -31,7 +31,7 @@ class Morphism(ArrowApply, ArrowChoice, Arrow, Category, Semigroupoid, Generic[A
     
     # --- Semigroupoid / Category ---
 
-    def compose(self: Morphism[B, C], other: Thunk[Morphism[A, B]]) -> Morphism[A, C]:
+    def compose(self: Morphism[B, C], other: Force[Morphism[A, B]]) -> Morphism[A, C]:
         def inner(a: A) -> C:
             function = other.force()
             return self(function(a))
@@ -44,19 +44,21 @@ class Morphism(ArrowApply, ArrowChoice, Arrow, Category, Semigroupoid, Generic[A
     # --- Arrow ---
 
     @classmethod
-    def arrow(cls, f: Thunk[Callable[[A], B]]) -> Morphism[A, B]:
+    def arrow(cls, f: Force[Callable[[A], B]]) -> Morphism[A, B]:
         return Morphism(f.force())
 
-    def first(self: Morphism[A, B]) -> Morphism[tuple[A, C], tuple[B, C]]:
+    @classmethod
+    def first(cls, self: Force[Morphism[A, B]]) -> Morphism[tuple[A, C], tuple[B, C]]:
         def inner(pair: tuple[A, C]) -> tuple[B, C]:
             a, c = pair
-            return (self(a), c)
+            f = self.force()
+            return (f(a), c)
         return Morphism(inner)
 
     # --- ArrowChoice ---
 
     @classmethod
-    def left(cls, self: Morphism[A, B]) -> Morphism[Either[A, C], Either[B, C]]:
+    def left(cls, self: Force[Morphism[A, B]]) -> Morphism[Either[A, C], Either[B, C]]:
         def inner(e: Either[A, C]) -> Either[B, C]:
             match e:
                 case Left(a):
