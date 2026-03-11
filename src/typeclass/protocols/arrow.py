@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Protocol, Callable, TypeVar, Generic, runtime_checkable, Self
 
 from typeclass.protocols.category import Category
+from typeclass.protocols.force import Force
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -78,18 +79,10 @@ class Arrow(Category, Protocol, Generic[A, B]):
         - coherence with pairing/associativity (for real implementations):
           product reassociation and projections behave as expected.
           (In Python you’ll likely pick a canonical tuple nesting.)
-
-    Notes for your project:
-        - You can keep the “thunk discipline” you already use:
-          interpret-and-force the operator/implementer, pass operands thunked.
-        - The typing surface can remain ergonomic (accept raw values/functions,
-          thunk internally in the syntax constructors), while the protocol types
-          remain honest about what’s delayed at runtime.
-
     """
 
     @classmethod
-    def arrow(cls, f: Callable[[A], B]) -> Arrow[A, B]:
+    def arrow(cls, f: Force[Callable[[A], B]]) -> Arrow[A, B]:
         """
         Lift a pure function into the Arrow.
 
@@ -107,7 +100,9 @@ class Arrow(Category, Protocol, Generic[A, B]):
         """
         ...
 
-    def first(self: Arrow[A, B]) -> Arrow[tuple[A, C], tuple[B, C]]:
+
+    @classmethod
+    def first(cls, self: Force[Arrow[A, B]]) -> Arrow[tuple[A, C], tuple[B, C]]:
         """
         Apply this Arrow to the first component of a pair, leaving the second
         component unchanged.
@@ -115,45 +110,10 @@ class Arrow(Category, Protocol, Generic[A, B]):
             first(f)(a, c) == (f(a), c)
 
         Must satisfy:
-            first(id) == id
-            first(g ∘ f) == first(g) ∘ first(f)
+            cls.first(id) == id
+            cls.first(g ∘ f) == cls.first(g) ∘ cls.first(f)
 
         Returns:
             Arrow[tuple[A, C], tuple[B, C]]: The lifted arrow on pairs.
-        """
-        ...
-
-    # ---- Optional derived helpers (convenience surface) ----
-    # You can implement these as real protocol methods OR supply them as
-    # free functions / mixin defaults. They are shown here as optional
-    # methods for completeness.
-
-    def second(self: Arrow[A, B]) -> Arrow[tuple[C, A], tuple[C, B]]:
-        """
-        Apply this Arrow to the second component of a pair.
-
-        Typically definable via `first` and a swap isomorphism.
-        """
-        ...
-
-    def split(self: Arrow[A, B], other: Arrow[C, D]) -> Arrow[tuple[A, C], tuple[B, D]]:
-        """
-        Parallel product composition (often written `***`).
-
-            (f *** g)(a, c) == (f(a), g(c))
-
-        This is the “structural independence” combinator: it expresses that the
-        two branches do not depend on each other, which is what later enables
-        scheduling/rewrite into parallel execution.
-        """
-        ...
-
-    def fanout(self: Arrow[A, B], other: Arrow[A, C]) -> Arrow[A, tuple[B, C]]:
-        """
-        Fanout / duplication (often written `&&&`).
-
-            (f &&& g)(a) == (f(a), g(a))
-
-        This is the graph-shaping primitive: one input feeds two branches.
         """
         ...

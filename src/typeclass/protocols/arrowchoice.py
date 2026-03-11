@@ -1,6 +1,3 @@
-# src/typeclass/protocols/arrow_choice.py
-from __future__ import annotations
-
 from typing import Protocol, TypeVar, Generic, runtime_checkable
 
 from typeclass.protocols.arrow import Arrow
