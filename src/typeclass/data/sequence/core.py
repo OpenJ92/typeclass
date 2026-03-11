@@ -76,7 +76,7 @@ class Sequence(Monad[A], Alternative, Applicative[A], Functor[A], Show, Generic[
 
     def __eq__(self: Sequence[A], other: Sequence[A]) -> bool:
         match (self, other):
-            case (Cons(x, xs), Cons(y, ys)):
+            case (Cons(head=x, tail=xs), Cons(head=y, tail=ys)):
                 return  x == y and xs == ys
             case (Nil(), Nil()):
                 return True
