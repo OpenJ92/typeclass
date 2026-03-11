@@ -8,8 +8,8 @@ if __name__ == "__main__":
     from typeclass.data.isomorphism import Isomorphism
     from typeclass.data.automorphism import Automorphism
     from typeclass.data.either import Left, Right
-    from typeclass.data.sequence import Sequence, Cons, Nil
-    from typeclass.data.tree import Tree
+    from typeclass.data.sequence import Sequence, Cons, Nil, concat, from_iterable, zipwith
+    from typeclass.data.tree import Tree, pretty
     from typeclass.syntax.applicative import pure, liftA2
     from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
     compose, rcompose, identity, invert, combine, mempty, inverse, arrow, first, second, split, fanout, \
@@ -318,16 +318,112 @@ if __name__ == "__main__":
     print(run_base(Left(10)))    # 0
     print(run_base(Right(30)))   # 3
 
-    def from_iterable(iterable):
-        """
-        Construct a Sequence from any iterable.
-
-        Elements are inserted in the same order as the iterable.
-        """
-        result = Nil()
-        for x in reversed(list(iterable)):
-            result = Cons(x, result)
-        return result
-
     l = from_iterable([1, 2, 3, 4, 5, 6])
 
+    
+    # small helper
+    def leaf(x):
+        return Tree(x, Nil())
+    
+    # 1. fmap over a leaf
+    t = leaf(10)
+    expr = t |fmap| (lambda x: x + 1)
+    print(interpret(expr, None, None).force())
+    # expected: Tree(11, Nil())
+    
+    # 2. fmap over one level of children
+    t = Tree( 10, from_iterable([ leaf(1), leaf(2), ]))
+    mapped = t |fmap| (lambda x: x * 2)
+    print(interpret(mapped, None, None).force())
+    # expected root 20, children 2 and 4
+    
+    # 3. applicative over same shape
+    tf = Tree( lambda x: x + 100, from_iterable([ leaf(lambda x: x * 2), leaf(lambda x: x - 1), ]))
+    
+    tx = Tree( 10, from_iterable([ leaf(3), leaf(8), ]))
+    
+    applied = tf |ap| tx
+    print(interpret(applied, None, None).force())
+    # expected root 110, children 6 and 7
+    
+    # 4. truncation behavior
+    tf_short = Tree( lambda x: x + 100, from_iterable([ leaf(lambda x: x * 2), ]))
+    
+    trunc = tf_short |ap| tx
+    print(interpret(trunc, None, None).force())
+    # expected root 110, only one child: 6
+
+    big = Tree(
+        "root",
+        from_iterable([
+            Tree(
+                "A",
+                from_iterable([
+                    Tree(
+                        "A1",
+                        from_iterable([
+                            leaf("A1a"),
+                            leaf("A1b"),
+                            leaf("A1c"),
+                        ])
+                    ),
+                    Tree(
+                        "A2",
+                        from_iterable([
+                            leaf("A2a"),
+                            leaf("A2b"),
+                        ])
+                    ),
+                ])
+            ),
+            Tree(
+                "B",
+                from_iterable([
+                    Tree(
+                        "B1",
+                        from_iterable([
+                            leaf("B1a"),
+                            leaf("B1b"),
+                        ])
+                    ),
+                    Tree(
+                        "B2",
+                        from_iterable([
+                            leaf("B2a"),
+                            leaf("B2b"),
+                            leaf("B2c"),
+                        ])
+                    ),
+                    Tree(
+                        "B3",
+                        from_iterable([
+                            leaf("B3a"),
+                        ])
+                    ),
+                ])
+            ),
+            Tree(
+                "C",
+                from_iterable([
+                    Tree(
+                        "C1",
+                        from_iterable([
+                            leaf("C1a"),
+                            leaf("C1b"),
+                        ])
+                    ),
+                    Tree(
+                        "C2",
+                        from_iterable([
+                            leaf("C2a"),
+                            leaf("C2b"),
+                            leaf("C2c"),
+                            leaf("C2d"),
+                        ])
+                    ),
+                ])
+            ),
+        ])
+    )
+    
+    

@@ -1,6 +1,9 @@
 from __future__ import annotations
 from typing import Generic, TypeVar, Callable, Iterable, Iterator
 
+from dataclasses import dataclass
+
+from typeclass.data.thunk import Thunk
 from typeclass.protocols.functor import Functor
 from typeclass.protocols.applicative import Applicative
 from typeclass.protocols.alternative import Alternative
@@ -11,6 +14,7 @@ from typeclass.protocols.force import Force
 A = TypeVar("A")
 B = TypeVar("B")
 
+@dataclass(frozen=True)
 class Sequence(Monad[A], Alternative, Applicative[A], Functor[A], Show, Generic[A]):
 
     # ----- Functor ---------------------------------------------------------
@@ -71,12 +75,12 @@ class Sequence(Monad[A], Alternative, Applicative[A], Functor[A], Show, Generic[
     # ----- Eq ------------------------------------------------------------
 
     def __eq__(self: Sequence[A], other: Sequence[A]) -> bool:
-        case (self, other):
-            match (Cons(x, xs), Cons(y, ys)):
+        match (self, other):
+            case (Cons(x, xs), Cons(y, ys)):
                 return True and xs == ys
-            match _:
+            case _:
                 return False
-            return True
+        return True
 
     # ----- Convenience -----------------------------------------------------
 
@@ -91,12 +95,13 @@ class Sequence(Monad[A], Alternative, Applicative[A], Functor[A], Show, Generic[
                     return
 
 
-class Cons(Sequence[A]):
-    def __init__(self, head: A, tail: Sequence[A]):
-        self.head = head
-        self.tail = tail
+@dataclass(frozen=True)
+class Cons(Sequence[A]): 
+    head: A
+    tail: Sequence[A]
 
 
+@dataclass(frozen=True)
 class Nil(Sequence[A]):
     pass
 
