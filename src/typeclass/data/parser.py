@@ -46,6 +46,7 @@ class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
 
     # --- Alternative -------------------------------------------------------
 
+    @classmethod
     def empty(cls) -> Parser[A]:
         return Parser(lambda input: [])
 
