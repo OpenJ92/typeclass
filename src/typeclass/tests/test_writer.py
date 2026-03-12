@@ -1,8 +1,9 @@
 import unittest
 
-from typeclass.data.maybe import Just, Nothing, Maybe
+from typeclass.data.writer import Writer
+from typeclass.data.sequence import Sequence, Cons, Nil
 from typeclass.interpret.interpreter import interpret
-from typeclass.tests.fixtures import maybe as fx_maybe
+from typeclass.tests.fixtures import writer as fx_writer
 
 from typeclass.tests.laws.functor import (
     functor_identity_expr,
@@ -19,6 +20,7 @@ from typeclass.tests.laws.applicative import (
     applicative_skip_expr,
     applicative_liftA2_expr,
 )
+
 from typeclass.tests.laws.monad import (
     monad_left_identity_expr,
     monad_right_identity_expr,
@@ -30,8 +32,7 @@ from typeclass.tests.laws.monad import (
     monad_rkleisli_expr,
 )
 
-
-class MaybeTestCase(unittest.TestCase):
+class WriterTestCase(unittest.TestCase):
     def assert_expr_equal(self, lhs, rhs):
         self.assertEqual(
             interpret(lhs, None, None).force(),
@@ -39,9 +40,9 @@ class MaybeTestCase(unittest.TestCase):
         )
 
 
-class TestMaybeFunctor(MaybeTestCase):
+class TestWriterFunctor(WriterTestCase):
     def test_functor_identity(self):
-        for value in fx_maybe.values():
+        for value in fx_writer.values():
             with self.subTest(value=value):
                 lhs, rhs = functor_identity_expr(value)
                 self.assert_expr_equal(lhs, rhs)
@@ -50,31 +51,31 @@ class TestMaybeFunctor(MaybeTestCase):
         f = lambda x: x + 1
         g = lambda x: x * x
 
-        for value in fx_maybe.values():
+        for value in fx_writer.values():
             with self.subTest(value=value):
                 lhs, rhs = functor_composition_expr(value, f, g)
                 self.assert_expr_equal(lhs, rhs)
 
     def test_functor_replace(self):
-        replacement = fx_maybe.replacement()
+        replacement = fx_writer.replacement()
 
-        for value in fx_maybe.values():
+        for value in fx_writer.values():
             with self.subTest(value=value):
                 lhs, rhs = functor_replace_expr(value, replacement)
                 self.assert_expr_equal(lhs, rhs)
 
     def test_functor_void(self):
-        for value in fx_maybe.values():
+        for value in fx_writer.values():
             with self.subTest(value=value):
                 lhs, rhs = functor_void_expr(value)
                 self.assert_expr_equal(lhs, rhs)
 
 
-class TestMaybeApplicative(MaybeTestCase):
+class TestWriterApplicative(WriterTestCase):
     def test_applicative_identity(self):
-        for value in fx_maybe.values():
+        for value in fx_writer.values():
             with self.subTest(value=value):
-                lhs, rhs = applicative_identity_expr(Maybe, value)
+                lhs, rhs = applicative_identity_expr(Writer(Sequence), value)
                 self.assert_expr_equal(lhs, rhs)
 
     def test_applicative_homomorphism(self):
@@ -84,115 +85,126 @@ class TestMaybeApplicative(MaybeTestCase):
         ]
 
         for f in funcs:
-            for x in fx_maybe.pure_values():
+            for x in fx_writer.pure_values():
                 with self.subTest(f=f, x=x):
-                    lhs, rhs = applicative_homomorphism_expr(Maybe, f, x)
+                    lhs, rhs = applicative_homomorphism_expr(Writer(Sequence), f, x)
                     self.assert_expr_equal(lhs, rhs)
 
     def test_applicative_interchange(self):
-        for u in fx_maybe.function_values():
-            for y in fx_maybe.pure_values():
+        ys = fx_writer.pure_values()
+
+        for u in fx_writer.function_values():
+            for y in ys:
                 with self.subTest(u=u, y=y):
-                    lhs, rhs = applicative_interchange_expr(Maybe, u, y)
+                    lhs, rhs = applicative_interchange_expr(Writer(Sequence), u, y)
                     self.assert_expr_equal(lhs, rhs)
 
     def test_applicative_composition(self):
         us = [
-            Just(lambda x: x + 1),
-            Just(lambda x: x * 2),
-            Nothing(),
+            Writer(Sequence)(lambda x: x + 1, fx_writer.values()[0].log),
+            Writer(Sequence)(lambda x: x * 2, fx_writer.values()[1].log),
         ]
         vs = [
-            Just(lambda x: x - 3),
-            Just(lambda x: x * x),
-            Nothing(),
+            Writer(Sequence)(lambda x: x - 3, fx_writer.values()[0].log),
+            Writer(Sequence)(lambda x: x * x, fx_writer.values()[2].log),
         ]
 
         for u in us:
             for v in vs:
-                for w in fx_maybe.values():
+                for w in fx_writer.values():
                     with self.subTest(u=u, v=v, w=w):
-                        lhs, rhs = applicative_composition_expr(Maybe, u, v, w)
+                        lhs, rhs = applicative_composition_expr(Writer(Sequence), u, v, w)
                         self.assert_expr_equal(lhs, rhs)
 
     def test_applicative_then_definition(self):
-        for fa in fx_maybe.values():
-            for fb in fx_maybe.values():
+        for fa in fx_writer.values():
+            for fb in fx_writer.values():
                 with self.subTest(fa=fa, fb=fb):
                     lhs, rhs = applicative_then_expr(fa, fb)
                     self.assert_expr_equal(lhs, rhs)
 
     def test_applicative_skip_definition(self):
-        for fa in fx_maybe.values():
-            for fb in fx_maybe.values():
+        for fa in fx_writer.values():
+            for fb in fx_writer.values():
                 with self.subTest(fa=fa, fb=fb):
                     lhs, rhs = applicative_skip_expr(fa, fb)
                     self.assert_expr_equal(lhs, rhs)
 
     def test_applicative_lifta2_definition(self):
-        for f in fx_maybe.binary_functions():
-            for fa in fx_maybe.values():
-                for fb in fx_maybe.values():
+        funcs = [
+            lambda a, b: (a, b),
+            lambda a, b: f"{a}:{b}",
+        ]
+        for f in funcs:
+            for fa in fx_writer.values():
+                for fb in fx_writer.values():
                     with self.subTest(f=f, fa=fa, fb=fb):
                         lhs, rhs = applicative_liftA2_expr(f, fa, fb)
                         self.assert_expr_equal(lhs, rhs)
 
-
-class TestMaybeMonad(MaybeTestCase):
+class TestWriterMonad(WriterTestCase):
     def test_monad_left_identity(self):
-        for x in fx_maybe.pure_values():
-            for f in fx_maybe.monad_functions():
+        funcs = [
+            lambda x: Writer(Sequence)(x, Cons("id", Nil())),
+            lambda x: Writer(Sequence)(x + 1, Cons("inc", Nil())),
+        ]
+
+        for x in [0, 1, 10]:
+            for f in funcs:
                 with self.subTest(x=x, f=f):
-                    lhs, rhs = monad_left_identity_expr(Maybe, x, f)
+                    lhs, rhs = monad_left_identity_expr(Writer(Sequence), x, f)
                     self.assert_expr_equal(lhs, rhs)
 
     def test_monad_right_identity(self):
-        for value in fx_maybe.values():
+        for value in fx_writer.values():
             with self.subTest(value=value):
-                lhs, rhs = monad_right_identity_expr(value, Maybe)
+                lhs, rhs = monad_right_identity_expr(value, Writer(Sequence))
                 self.assert_expr_equal(lhs, rhs)
 
     def test_monad_associativity(self):
-        f, g = fx_maybe.monad_functions()[:2]
+        f = lambda x: Writer(Sequence)(x + 1, Cons("f", Nil()))
+        g = lambda x: Writer(Sequence)(x * 2, Cons("g", Nil()))
 
-        for value in fx_maybe.values():
+        for value in fx_writer.values():
             with self.subTest(value=value):
                 lhs, rhs = monad_associativity_expr(value, f, g)
                 self.assert_expr_equal(lhs, rhs)
 
     def test_monad_join_definition(self):
-        for value in fx_maybe.join_values():
+        for value in fx_writer.join_values():
             with self.subTest(value=value):
                 lhs, rhs = monad_join_expr(value)
                 self.assert_expr_equal(lhs, rhs)
 
     def test_monad_mthen_definition(self):
-        for ma in fx_maybe.values():
-            for mb in fx_maybe.values():
+        for ma in fx_writer.values():
+            for mb in fx_writer.values():
                 with self.subTest(ma=ma, mb=mb):
                     lhs, rhs = monad_mthen_expr(ma, mb)
                     self.assert_expr_equal(lhs, rhs)
 
     def test_monad_rbind_definition(self):
-        f = fx_maybe.monad_functions()[0]
+        f = lambda x: Writer(Sequence)(x + 1, Cons("rbind", Nil()))
 
-        for value in fx_maybe.values():
+        for value in fx_writer.values():
             with self.subTest(value=value):
                 lhs, rhs = monad_rbind_expr(f, value)
                 self.assert_expr_equal(lhs, rhs)
 
     def test_monad_kleisli_definition(self):
-        f, g = fx_maybe.monad_functions()[:2]
+        f = lambda x: Writer(Sequence)(x + 1, Cons("f", Nil()))
+        g = lambda x: Writer(Sequence)(x * 2, Cons("g", Nil()))
 
-        for x in fx_maybe.pure_values():
+        for x in [0, 1, 10]:
             with self.subTest(x=x):
                 lhs, rhs = monad_kleisli_expr(f, g, x)
                 self.assert_expr_equal(lhs, rhs)
 
     def test_monad_rkleisli_definition(self):
-        f, g = fx_maybe.monad_functions()[:2]
+        f = lambda x: Writer(Sequence)(x + 1, Cons("f", Nil()))
+        g = lambda x: Writer(Sequence)(x * 2, Cons("g", Nil()))
 
-        for x in fx_maybe.pure_values():
+        for x in [0, 1, 10]:
             with self.subTest(x=x):
                 lhs, rhs = monad_rkleisli_expr(f, g, x)
                 self.assert_expr_equal(lhs, rhs)

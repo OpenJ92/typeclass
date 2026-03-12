@@ -9,13 +9,15 @@ from typeclass.protocols.applicative import Applicative
 from typeclass.protocols.alternative import Alternative
 from typeclass.protocols.monad import Monad
 from typeclass.protocols.show import Show
+from typeclass.protocols.semigroup import Semigroup
+from typeclass.protocols.monoid import Monoid
 from typeclass.protocols.force import Force
 
 A = TypeVar("A")
 B = TypeVar("B")
 
 @dataclass(frozen=True)
-class Sequence(Monad[A], Alternative, Applicative[A], Functor[A], Show, Generic[A]):
+class Sequence(Monoid, Semigroup, Monad[A], Alternative, Applicative[A], Functor[A], Show, Generic[A]):
 
     # ----- Functor ---------------------------------------------------------
 
@@ -67,7 +69,18 @@ class Sequence(Monad[A], Alternative, Applicative[A], Functor[A], Show, Generic[
             case Nil():
                 return Nil()
 
-    # ----- Show ------------------------------------------------------------
+    # ----- Semigroup -----------------------------------------------------
+
+    def combine(self: Sequence[A], other: Sequence[B]):
+        return concat(self, other)
+
+    # ----- Monoid --------------------------------------------------------
+
+    @classmethod
+    def mempty(cls):
+        return Nil()
+
+    # ----- Show ----------------------------------------------------------
 
     def __repr__(self) -> str:
         return f"Sequence({list(iter(self))!r})"
