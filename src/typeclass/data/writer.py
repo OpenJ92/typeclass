@@ -77,7 +77,7 @@ class Writer(Monad[A], Applicative[A], Functor[A], Show, Eq, Generic[W, A]):
     def show(self) -> str:
         return f"Writer(value={self.value!r}, log={self.log!r})"
 
-    def eq(self, other: object) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, Writer)
             and self.value == other.value

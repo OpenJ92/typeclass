@@ -95,6 +95,3 @@ def skip(fa: Applicative[A], fb: Applicative[B]) -> Applicative[A]:
         An Applicative containing the result of `fa`.
     """
     return liftA2(lambda a, _: a, fa, fb)
-
-## def optional(fa: Alternative[A]) -> Alternative[Optional[A]]
-##     # Come back to this later.
