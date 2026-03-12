@@ -1,6 +1,6 @@
 from typeclass.syntax.infix import Infix
 from typeclass.syntax.functor import fmap, replace, void
-from typeclass.syntax.applicative import ap, pure, then, skip
+from typeclass.syntax.applicative import ap, pure, then, skip, liftA2
 from typeclass.syntax.alternative import otherwise, empty, some, many
 from typeclass.syntax.monad import bind, return_, mthen, join, rbind, kleisli, rkleisli
 from typeclass.syntax.semigroupoid import compose, rcompose
