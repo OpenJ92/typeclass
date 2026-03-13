@@ -15,7 +15,7 @@ B = TypeVar("B")
 @dataclass(frozen=True)
 class Tree(Applicative[A], Functor[A], Show, Eq, Generic[A]):
     value: A
-    children: Seq[Tree[A]]
+    children: Sequence[Tree[A]]
 
     # ----- Functor ---------------------------------------------------------
 
@@ -50,5 +50,7 @@ class Tree(Applicative[A], Functor[A], Show, Eq, Generic[A]):
     def __eq__(self: Tree[A], other: Tree[A]) -> bool:
         match (self, other):
             case (Tree(c, cs), Tree(d, ds)):
-                return c == d and cs == cs
+                return c == d and cs == ds
+            case _:
+                return False
 

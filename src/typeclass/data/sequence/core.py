@@ -71,8 +71,8 @@ class Sequence(Monoid, Semigroup, Monad[A], Alternative, Applicative[A], Functor
 
     # ----- Semigroup -----------------------------------------------------
 
-    def combine(self: Sequence[A], other: Sequence[B]):
-        return concat(self, other)
+    def combine(self: Sequence[A], other: Force[Sequence[B]]):
+        return concat(self, other.force())
 
     # ----- Monoid --------------------------------------------------------
 
@@ -89,7 +89,7 @@ class Sequence(Monoid, Semigroup, Monad[A], Alternative, Applicative[A], Functor
 
     def __eq__(self: Sequence[A], other: Sequence[A]) -> bool:
         match (self, other):
-            case (Cons(x, xs), Cons(y, ys)):
+            case (Cons(head=x, tail=xs), Cons(head=y, tail=ys)):
                 return  x == y and xs == ys
             case (Nil(), Nil()):
                 return True

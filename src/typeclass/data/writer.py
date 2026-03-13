@@ -2,12 +2,15 @@ from dataclasses import dataclass
 from functools import cache
 from typing import Callable, Generic, TypeVar
 
+from typeclass.data.thunk import Thunk
+
 from typeclass.protocols.applicative import Applicative
 from typeclass.protocols.eq import Eq
 from typeclass.protocols.functor import Functor
 from typeclass.protocols.monad import Monad
 from typeclass.protocols.monoid import Monoid
 from typeclass.protocols.show import Show
+from typeclass.protocols.force import Force
 
 W = TypeVar("W", bound=Monoid)
 A = TypeVar("A")
@@ -39,7 +42,7 @@ class WriterBase(
     def run(self) -> tuple[A, W]:
         return (self.value, self.log)
 
-    def fmap(self: WriterBase[W, A], f: Callable[[A], B]) -> WriterBase[W, B]:
+    def fmap(self: WriterBase[W, A], f: Force[Callable[[A], B]]) -> WriterBase[W, B]:
         return type(self)(f.force()(self.value), self.log)
 
     @classmethod
@@ -51,22 +54,22 @@ class WriterBase(
 
     def ap(
         self: WriterBase[W, Callable[[A], B]],
-        fa: WriterBase[W, A],
+        fa: Force[WriterBase[W, A]],
     ) -> WriterBase[W, B]:
         wa = fa.force()
         return type(self)(
             self.value(wa.value),
-            self.log.combine(wa.log),
+            self.log.combine(Thunk(lambda: wa.log)),
         )
 
     def bind(
         self: WriterBase[W, A],
-        fm: Callable[[A], WriterBase[W, B]],
+        fm: Force[Callable[[A], WriterBase[W, B]]],
     ) -> WriterBase[W, B]:
         wb = fm.force()(self.value)
         return type(self)(
             wb.value,
-            self.log.combine(wb.log),
+            self.log.combine(Thunk(lambda: wb.log)),
         )
 
     def show(self) -> str:
