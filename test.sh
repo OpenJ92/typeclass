@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # Save current directory
 START_DIR="$(pwd)"
