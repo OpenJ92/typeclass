@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import unittest
 
 from typeclass.data.parser import Parser
