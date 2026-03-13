@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Generic, TypeVar, Callable
 
 from typeclass.data.thunk import Thunk
-from typeclass.data.sequence import Sequence, Cons, Nil, zipwith
+from typeclass.data.sequence import Sequence, Cons, Nil, concat
 from typeclass.protocols.functor import Functor
 from typeclass.protocols.applicative import Applicative
 from typeclass.protocols.show import Show
@@ -29,15 +29,42 @@ class Tree(Applicative[A], Functor[A], Show, Eq, Generic[A]):
     # ----- Applicative -----------------------------------------------------
 
     @classmethod
-    def pure(cls: type, value: A) -> Tree[A]:
+    def pure(cls, value: A) -> "Tree[A]":
         return Tree(value, Nil())
 
-    def ap(self: Tree[Callable[[A], B]], fa: Force[Tree[A]]) -> Tree[B]:
-        _fa = fa.force()
+    def ap(self: "Tree[Callable[[A], B]]", fa: Force["Tree[A]"]) -> "Tree[B]":
+        xs = fa.force()
 
-        match (self, _fa):
-            case (Tree(value=f, children=tfs), Tree(value=a, children=txs)):
-                return Tree(f(a), zipwith(lambda tf, tx: tf.ap(Thunk(lambda: tx)), tfs, txs))
+        return self.bind(
+            Thunk(
+                lambda: lambda f:
+                    xs.fmap(
+                        Thunk(lambda: lambda x: f(x))
+                    )
+            )
+        )
+
+    # ----- Monad ------------------------------------------------------------
+
+    def bind(self: "Tree[A]", f: Force[Callable[[A], "Tree[B]"]]) -> "Tree[B]":
+        nf = f.force()
+
+        match self:
+            case Tree(value=value, children=children):
+
+                rewritten = nf(value)
+
+                rebound_children = children.fmap(
+                    Thunk(
+                        lambda: lambda child:
+                            child.bind(Thunk(lambda: nf))
+                    )
+                )
+
+                return Tree(
+                    rewritten.value,
+                    concat(rewritten.children, rebound_children)
+                )
     
     # ----- Show ------------------------------------------------------------
 
