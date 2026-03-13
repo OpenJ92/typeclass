@@ -71,8 +71,8 @@ class Sequence(Monoid, Semigroup, Monad[A], Alternative, Applicative[A], Functor
 
     # ----- Semigroup -----------------------------------------------------
 
-    def combine(self: Sequence[A], other: Sequence[B]):
-        return concat(self, other)
+    def combine(self: Sequence[A], other: Force[Sequence[B]]):
+        return concat(self, other.force())
 
     # ----- Monoid --------------------------------------------------------
 
