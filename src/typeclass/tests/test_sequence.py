@@ -30,6 +30,11 @@ from typeclass.tests.laws.monad import (
     monad_rkleisli_expr,
 )
 
+from typeclass.tests.laws.semigroup import semigroup_associativity_expr
+from typeclass.tests.laws.monoid import (
+    monoid_left_identity_expr,
+    monoid_right_identity_expr,
+)
 
 class SequenceTestCase(unittest.TestCase):
     def assert_expr_equal(self, lhs, rhs):
@@ -187,6 +192,28 @@ class TestSequenceMonad(SequenceTestCase):
             with self.subTest(x=x):
                 lhs, rhs = monad_rkleisli_expr(f, g, x)
                 self.assert_expr_equal(lhs, rhs)
+
+class TestSequenceSemigroup(SequenceTestCase):
+    def test_semigroup_associativity(self):
+        for x, y, z in fx_sequence.triples():
+            with self.subTest(x=x, y=y, z=z):
+                lhs, rhs = semigroup_associativity_expr(x, y, z)
+                self.assert_expr_equal(lhs, rhs)
+
+
+class TestSequenceMonoid(SequenceTestCase):
+    def test_monoid_left_identity(self):
+        for value in fx_sequence.values():
+            with self.subTest(value=value):
+                lhs, rhs = monoid_left_identity_expr(Sequence, value)
+                self.assert_expr_equal(lhs, rhs)
+
+    def test_monoid_right_identity(self):
+        for value in fx_sequence.values():
+            with self.subTest(value=value):
+                lhs, rhs = monoid_right_identity_expr(Sequence, value)
+                self.assert_expr_equal(lhs, rhs)
+
 
 
 if __name__ == "__main__":

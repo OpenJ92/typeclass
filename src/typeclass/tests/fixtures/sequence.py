@@ -76,3 +76,12 @@ def join_values():
         Cons(Cons(1, Nil()), Nil()),
         Cons(Cons(1, Cons(2, Nil())), Cons(Cons(3, Nil()), Nil())),
     ]
+
+def triples():
+    xs = values()
+    return [
+        (x, y, z)
+        for x in xs
+        for y in xs
+        for z in xs
+    ]
