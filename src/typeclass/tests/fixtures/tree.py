@@ -70,3 +70,40 @@ def binary_functions():
         lambda a, b: a + b,
         lambda a, b: a * b,
     ]
+
+
+def monad_functions():
+    return [
+        lambda x: Tree(x, Nil()),
+        lambda x: Tree(x + 1, Cons(Tree(x * 2, Nil()), Nil())),
+        lambda x: Tree(
+            x - 1,
+            Cons(Tree(x + 10, Nil()), Cons(Tree(x + 20, Nil()), Nil())),
+        ),
+    ]
+
+
+def join_values():
+    return [
+        Tree(Tree(1, Nil()), Nil()),
+        Tree(
+            Tree(1, Cons(Tree(2, Nil()), Nil())),
+            Cons(
+                Tree(Tree(3, Nil()), Nil()),
+                Nil(),
+            ),
+        ),
+        Tree(
+            Tree(
+                10,
+                Cons(Tree(20, Nil()), Nil()),
+            ),
+            Cons(
+                Tree(
+                    Tree(30, Nil()),
+                    Nil(),
+                ),
+                Nil(),
+            ),
+        ),
+    ]
