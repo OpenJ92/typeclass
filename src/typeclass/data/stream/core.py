@@ -5,18 +5,21 @@ from typeclass.protocols.functor import Functor
 from typeclass.protocols.applicative import Applicative
 from typeclass.protocols.comonad import Comonad
 from typeclass.protocols.show import Show
+from typeclass.protocols.eq import Eq
 from typeclass.data.thunk import Thunk
 
 A = TypeVar("A")
 
 @dataclass(frozen=True)
-class Stream(Applicative[A], Comonad[A], Functor[A], Show, Generic[A]):
+class Stream(Applicative[A], Comonad[A], Functor[A], Eq, Show, Generic[A]):
     head: A
-    tail: Thunk["Stream[A]"]
+    tail: Thunk[Stream[A]]
+
+    EQ_PREFIX = 10
 
     # ----- Functor ---------------------------------------------------------
 
-    def fmap(self, f: Force[Callable[[A], B]]) -> "Stream[B]":
+    def fmap(self, f: Force[Callable[[A], B]]) -> Stream[B]:
         nf = f.force()
         return Stream(
             nf(self.head),
@@ -26,10 +29,10 @@ class Stream(Applicative[A], Comonad[A], Functor[A], Show, Generic[A]):
     # ----- Applicative -----------------------------------------------------
 
     @classmethod
-    def pure(cls, value: A) -> "Stream[A]":
+    def pure(cls, value: A) -> Stream[A]:
         return Stream(value, Thunk(lambda: cls.pure(value)))
 
-    def ap(self: "Stream[Callable[[A], B]]", fa: Force["Stream[A]"]) -> "Stream[B]":
+    def ap(self: Stream[Callable[[A], B]], fa: Force[Stream[A]]) -> Stream[B]:
         xs = fa.force()
         return Stream(
             self.head(xs.head),
@@ -41,7 +44,7 @@ class Stream(Applicative[A], Comonad[A], Functor[A], Show, Generic[A]):
     def extract(self) -> A:
         return self.head
 
-    def duplicate(self) -> "Stream[Stream[A]]":
+    def duplicate(self) -> Stream[Stream[A]]:
         return Stream(
             self,
             Thunk(lambda: self.tail.force().duplicate()),
@@ -52,8 +55,27 @@ class Stream(Applicative[A], Comonad[A], Functor[A], Show, Generic[A]):
     def __repr__(self) -> str:
         return f"Stream({self.head!r}, Thunk(<tail>))"
 
+    # ----- Eq ----------------------------------------------------------------
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Stream):
+            return False
+
+        left = self
+        right = other
+
+        for _ in range(self.EQ_PREFIX):
+            if left.head != right.head:
+                return False
+            left = left.tail.force()
+            right = right.tail.force()
+
+        return True
+
     def __iter__(self) -> Iterator[A]:
         cur: Stream[A] = self
         while True:
             yield cur.head
             cur = cur.tail.force()
+
+
