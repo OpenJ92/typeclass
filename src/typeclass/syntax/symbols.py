@@ -3,6 +3,7 @@ from typeclass.syntax.functor import fmap, replace, void
 from typeclass.syntax.applicative import ap, pure, then, skip, liftA2
 from typeclass.syntax.alternative import otherwise, empty, some, many
 from typeclass.syntax.monad import bind, return_, mthen, join, rbind, kleisli, rkleisli
+from typeclass.syntax.comonad import extract, duplicate, extend
 from typeclass.syntax.semigroupoid import compose, rcompose
 from typeclass.syntax.category import identity
 from typeclass.syntax.groupoid import invert
@@ -40,3 +41,4 @@ left = Infix(left)
 right = Infix(right)
 plusplus = Infix(plusplus)
 oror = Infix(oror)
+extend = Infix(extend)
