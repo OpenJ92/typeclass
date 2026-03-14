@@ -3,6 +3,7 @@ from typeclass.syntax.functor import Map
 from typeclass.syntax.applicative import Ap, Pure
 from typeclass.syntax.alternative import Otherwise, Empty, Some, Many
 from typeclass.syntax.monad import Bind, Return
+from typeclass.syntax.comonad import Extract, Duplicate
 from typeclass.syntax.semigroupoid import Compose
 from typeclass.syntax.category import ID
 from typeclass.syntax.groupoid import Invert
@@ -125,6 +126,18 @@ def interpret(free, cofree, env):
                 return interpret(f.force()(a), None, None).force()
 
             return Thunk(lambda: ma.bind(Thunk(lambda: k)))
+
+        # ----- Comonad ---------------------------------------------------------
+        # Core Comonad operations. `extend` is derived and lowered through
+        # `duplicate` and `fmap`, so only extract and duplicate are primitive.
+
+        case Extract(wa):
+            wa = interpret(wa.force(), None, None).force()
+            return Thunk(lambda: wa.extract())
+
+        case Duplicate(wa):
+            wa = interpret(wa.force(), None, None).force()
+            return Thunk(lambda: wa.duplicate())
 
         # ----- Semigroupoid -----------------------------------------------------
         # Sequential composition of morphisms.
