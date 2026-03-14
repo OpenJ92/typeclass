@@ -38,8 +38,9 @@ def comonad_associativity_expr(
             ==
         extend (lambda x: f (extend g x)) w
     """
+    from typeclass.interpret.interpreter import realize
     lhs = (value |extend| g) |extend| f
-    rhs = value |extend| (lambda x: f(x |extend| g))
+    rhs = value |extend| (lambda x: f(realize(x |extend| g).force()))
     return lhs, rhs
 
 
