@@ -17,6 +17,13 @@ from typeclass.syntax.arrowapply import Apply
 from typeclass.data.either import Left as ELeft, Right as ERight
 from typeclass.data.thunk import Thunk
 
+def realize(expression):
+    return interpret(expression, None, None)
+def force(expression):
+    return expression.force()
+def thunk(value):
+    return Thunk(lambda: value)
+
 def interpret(free, cofree, env):
     """
     Normalize a syntax tree into a delayed runtime value.
