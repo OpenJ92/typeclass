@@ -10,12 +10,12 @@ B = TypeVar("B")
 @dataclass
 class Return:
     cls: type
-    value: Thunk
+    value: Thunk[Monad[A]]
 
 @dataclass
 class Bind:
-    ma: Thunk
-    f: Thunk
+    ma: Thunk[Monad[A]]
+    f: Thunk[Callable[[A], Monad[B]]]
 
 def return_(cls: type, value: A) -> Monad[A]:
     """
