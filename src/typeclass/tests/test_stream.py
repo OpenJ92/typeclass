@@ -1,7 +1,6 @@
 import unittest
 
 from typeclass.data.stream import Stream
-from typeclass.data.stream.lib import take
 from typeclass.interpret.interpreter import interpret
 from typeclass.tests.fixtures import stream as fx_stream
 

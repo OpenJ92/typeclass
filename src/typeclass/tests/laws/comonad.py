@@ -1,6 +1,7 @@
 from typing import Callable, TypeVar
 from typeclass.protocols.comonad import Comonad
 from typeclass.syntax.symbols import fmap, extract, duplicate, extend
+from typeclass.interpret.interpreter import evaluated
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -38,9 +39,8 @@ def comonad_associativity_expr(
             ==
         extend (lambda x: f (extend g x)) w
     """
-    from typeclass.interpret.interpreter import realize
     lhs = (value |extend| g) |extend| f
-    rhs = value |extend| (lambda x: f(realize(x |extend| g).force()))
+    rhs = value |extend| (lambda x: evaluated(f)(x |extend| g))
     return lhs, rhs
 
 
