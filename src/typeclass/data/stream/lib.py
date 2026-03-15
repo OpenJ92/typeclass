@@ -4,7 +4,7 @@ from typeclass.data.thunk import Thunk
 from typeclass.data.stream.core import Stream
 from typeclass.data.sequence import Sequence, Cons, Nil
 
-from typeclass.syntax.symbols import pure, ap
+from typeclass.syntax.symbols import pure, ap, duplicate
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -251,10 +251,7 @@ def _tails(stream: Stream[A]) -> Stream[Stream[A]]:
     Returns:
         A Stream of Streams, where each element is a tail of the original Stream.
     """
-    return Stream(
-        stream,
-        Thunk(lambda: _tails(stream.tail.force())),
-    )
+    return duplicate(stream)
 
 
 def _cycle_sequence(xs: Sequence[A]) -> Stream[A]:
