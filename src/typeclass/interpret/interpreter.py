@@ -17,12 +17,40 @@ from typeclass.syntax.arrowapply import Apply
 from typeclass.data.either import Left as ELeft, Right as ERight
 from typeclass.data.thunk import Thunk
 
+from functools import wraps
+from inspect import signature
+
 def realize(expression):
     return interpret(expression, None, None)
-def force(expression):
-    return expression.force()
-def thunk(value):
-    return Thunk(lambda: value)
+def evaluate(expression):
+    return realize(expression).force()
+def curry(fn):
+    arity = len(signature(fn).parameters)
+
+    @wraps(fn)
+    def curried(*args):
+        if len(args) >= arity:
+            return fn(*args)
+        return lambda *more: curried(*(args + more))
+    return curried
+def interpreted(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        return fn(
+            *[realize(a) for a in args],
+            **{k: realize(v) for k, v in kwargs.items()},
+        )
+    return wrapped
+
+
+def evaluated(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        return fn(
+            *[evaluate(a) for a in args],
+            **{k: evaluate(v) for k, v in kwargs.items()},
+        )
+    return wrapped
 
 def interpret(free, cofree, env):
     """
