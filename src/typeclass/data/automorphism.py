@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Callable, Generic, TypeVar
 
 from typeclass.data.endomorphism import Endomorphism
-from typeclass.protocols.group import Group
+from typeclass.typeclasses.group import Group
 
 T = TypeVar("T")
 

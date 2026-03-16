@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Callable, Generic, TypeVar
 
-from typeclass.protocols.force import Force
+from typeclass.typeclasses.force import Force
 
 T = TypeVar("T")
 

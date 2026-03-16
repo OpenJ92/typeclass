@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from typeclass.protocols.functor import Functor
-from typeclass.protocols.applicative import Applicative
-from typeclass.protocols.comonad import Comonad
-from typeclass.protocols.show import Show
-from typeclass.protocols.eq import Eq
+from typeclass.typeclasses.functor import Functor
+from typeclass.typeclasses.applicative import Applicative
+from typeclass.typeclasses.comonad import Comonad
+from typeclass.typeclasses.show import Show
+from typeclass.typeclasses.eq import Eq
 from typeclass.data.thunk import Thunk
 
 A = TypeVar("A")

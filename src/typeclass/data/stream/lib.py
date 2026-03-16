@@ -4,7 +4,7 @@ from typeclass.data.thunk import Thunk
 from typeclass.data.stream.core import Stream
 from typeclass.data.sequence import Sequence, Cons, Nil
 
-from typeclass.syntax.symbols import pure, ap, duplicate
+from typeclass.typeclasses.symbols import pure, ap, duplicate
 
 A = TypeVar("A")
 B = TypeVar("B")

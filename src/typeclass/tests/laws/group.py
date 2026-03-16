@@ -1,6 +1,6 @@
 from typing import TypeVar
-from typeclass.protocols.group import Group
-from typeclass.syntax.symbols import combine, mempty, inverse
+from typeclass.typeclasses.group import Group
+from typeclass.typeclasses.symbols import combine, mempty, inverse
 
 A = TypeVar("A", bound=Group)
 

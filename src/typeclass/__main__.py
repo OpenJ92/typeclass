@@ -10,8 +10,8 @@ if __name__ == "__main__":
     from typeclass.data.either import Left, Right
     from typeclass.data.sequence import Sequence, Cons, Nil, concat, from_iterable, zipwith
     from typeclass.data.tree import Tree, pretty
-    from typeclass.syntax.applicative import pure, liftA2
-    from typeclass.syntax.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
+    from typeclass.typeclasses.applicative import pure, liftA2
+    from typeclass.typeclasses.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
     compose, rcompose, identity, invert, combine, mempty, inverse, arrow, first, second, split, fanout, \
     left, right, plusplus, oror, apply
     from typeclass.interpret.interpreter import interpret

@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import Callable, Generic, TypeVar
 
 from typeclass.data.morphism import Morphism
-from typeclass.protocols.semigroup import Semigroup
-from typeclass.protocols.monoid import Monoid
+from typeclass.typeclasses.semigroup import Semigroup
+from typeclass.typeclasses.monoid import Monoid
 
 T = TypeVar("T")
 

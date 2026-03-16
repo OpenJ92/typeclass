@@ -1,6 +1,6 @@
 from typing import TypeVar
-from typeclass.protocols.semigroupoid import Semigroupoid
-from typeclass.syntax.symbols import compose, rcompose
+from typeclass.typeclasses.semigroupoid import Semigroupoid
+from typeclass.typeclasses.symbols import compose, rcompose
 
 A = TypeVar("A")
 B = TypeVar("B")

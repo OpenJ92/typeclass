@@ -1,6 +1,6 @@
 from typing import TypeVar
-from typeclass.protocols.semigroup import Semigroup
-from typeclass.syntax.symbols import combine
+from typeclass.typeclasses.semigroup import Semigroup
+from typeclass.typeclasses.symbols import combine
 
 A = TypeVar("A", bound=Semigroup)
 
