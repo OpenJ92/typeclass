@@ -1,7 +1,7 @@
 import unittest
 
 from typeclass.data.stream import Stream
-from typeclass.interpret.interpreter import interpret
+from typeclass.interpret.run import run
 from typeclass.tests.fixtures import stream as fx_stream
 
 from typeclass.tests.laws.functor import (
@@ -33,8 +33,8 @@ from typeclass.tests.laws.comonad import (
 class StreamTestCase(unittest.TestCase):
     def assert_expr_equal(self, lhs, rhs, prefix: int | None = None):
         self.assertEqual(
-            interpret(lhs, None, None).force(),
-            interpret(rhs, None, None).force(),
+            run(lhs, None, None).force(),
+            run(rhs, None, None).force(),
         )
 
 

@@ -1,7 +1,7 @@
 import unittest
 
 from typeclass.data.state import State
-from typeclass.interpret.interpreter import interpret
+from typeclass.interpret.run import run
 from typeclass.tests.fixtures import state as fx_state
 
 from typeclass.tests.laws.functor import (
@@ -33,8 +33,8 @@ from typeclass.tests.laws.monad import (
 
 class StateTestCase(unittest.TestCase):
     def assert_state_expr_equal(self, lhs, rhs):
-        lhs_state = interpret(lhs, None, None).force()
-        rhs_state = interpret(rhs, None, None).force()
+        lhs_state = run(lhs, None, None).force()
+        rhs_state = run(rhs, None, None).force()
 
         for state in fx_state.states():
             with self.subTest(state=state):

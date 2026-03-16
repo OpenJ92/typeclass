@@ -1,7 +1,7 @@
 import unittest
 
 from typeclass.data.parser import Parser
-from typeclass.interpret.interpreter import interpret
+from typeclass.interpret.run import run
 from typeclass.tests.fixtures import parser as fx_parser
 
 from typeclass.tests.laws.functor import (
@@ -40,8 +40,8 @@ from typeclass.tests.laws.alternative import (
 
 class ParserTestCase(unittest.TestCase):
     def assert_parser_expr_equal(self, lhs, rhs):
-        lhs_parser = interpret(lhs, None, None).force()
-        rhs_parser = interpret(rhs, None, None).force()
+        lhs_parser = run(lhs, None, None).force()
+        rhs_parser = run(rhs, None, None).force()
 
         for s in fx_parser.inputs():
             with self.subTest(input=s):
