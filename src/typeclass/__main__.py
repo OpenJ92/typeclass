@@ -14,7 +14,7 @@ if __name__ == "__main__":
     from typeclass.typeclasses.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
     compose, rcompose, identity, invert, combine, mempty, inverse, arrow, first, second, split, fanout, \
     left, right, plusplus, oror, apply
-    from typeclass.run.interpreter import run
+    from typeclass.interpret.run import run
 
     free = Just(10) |fmap| (lambda x: x + 5)
     result = run(free, None, None).force()
@@ -184,7 +184,7 @@ if __name__ == "__main__":
          |compose| (endo |split| (E, endo) |split| (E, E(_right))) \
          |compose| (endo |fanout| (E, endo) |fanout| (E, endo))
     result_ = run(free, None, None).force()
-    print(f"{result_(10)} == ((12,12), 10)", result_(10) == (12,12,10))
+    print(f"{result_(10)} == (12,12, 10)", result_(10) == (12,12,10))
 
     deep = M |arrow| flatten \
          |compose| (endo |split|  (E, endo) |split|  (E, endo) |split|  (E, endo)) \
@@ -192,6 +192,7 @@ if __name__ == "__main__":
          |compose| (endo |split|  (E, endo) |split|  (E, endo) |split|  (E, endo)) \
          |compose| (endo |fanout| (E, endo) |fanout| (E, endo) |fanout| (E, endo))              
     result = run(deep, None, None).force()
+
 
     inc = M(lambda x: x + 1)
 
@@ -209,34 +210,35 @@ if __name__ == "__main__":
     inc = M(lambda x: x + 1)
 
     free = M |left| inc
-    run = run(free, None, None).force()
-    print(run(Left(10)),  run(Left(10))  == Left(11))
-    print(run(Right("x")), run(Right("x")) == Right("x"))
+    _run = run(free, None, None).force()
+    print(_run(Left(10)),   _run(Left(10))  == Left(11))
+    print(_run(Right("x")), _run(Right("x")) == Right("x"))
 
     free = M |right| inc
-    run = run(free, None, None).force()
-    print(run(Left("x")),  run(Left("x"))  == Left("x"))
-    print(run(Right(10)),  run(Right(10))  == Right(11))
+    _run = run(free, None, None).force()
+
+    print(_run(Left("x")),  _run(Left("x"))  == Left("x"))
+    print(_run(Right(10)),  _run(Right(10))  == Right(11))
 
         # --- ArrowChoice +++ example ---
     inc = M(lambda x: x + 1)
     dbl = M(lambda x: 2 * x)
 
     free = inc |plusplus| (M, dbl)
-    run = run(free, None, None).force()
+    _run = run(free, None, None).force()
 
-    print(run(Left(10)),   run(Left(10))   == Left(11))   # Left branch uses inc
-    print(run(Right(10)),  run(Right(10))  == Right(20))  # Right branch uses dbl
+    print(_run(Left(10)),   _run(Left(10))   == Left(11))   # Left branch uses inc
+    print(_run(Right(10)),  _run(Right(10))  == Right(20))  # Right branch uses dbl
 
         # --- ArrowChoice ||| (oror) example ---
     inc = M(lambda x: x + 1)
     dbl = M(lambda x: 2 * x)
 
     free = inc |oror| (M, dbl)
-    run = run(free, None, None).force()
+    _run = run(free, None, None).force()
 
-    print(run(Left(10)),   run(Left(10))   == 11)  # Left branch returns B
-    print(run(Right(10)),  run(Right(10))  == 20)  # Right branch returns B
+    print(_run(Left(10)),   _run(Left(10))   == 11)  # Left branch returns B
+    print(_run(Right(10)),  _run(Right(10))  == 20)  # Right branch returns B
 
         # --- Stop-or-continue shape: Either drives branching ---
     # Left means "done", Right means "continue"; oror chooses.
@@ -244,9 +246,9 @@ if __name__ == "__main__":
     cont = M(lambda x: x + 1000)     # A -> B (just to show different path)
 
     free = done |oror| (M, cont)
-    run = run(free, None, None).force()
-    print(run(Left(7)),   run(Left(7))   == 7)
-    print(run(Right(7)),  run(Right(7))  == 1007)
+    _run = run(free, None, None).force()
+    print(_run(Left(7)),   _run(Left(7))   == 7)
+    print(_run(Right(7)),  _run(Right(7))  == 1007)
 
     inc    = M(lambda x: x + 1)
     times3 = M(lambda x: x * 3)
@@ -270,11 +272,11 @@ if __name__ == "__main__":
     id_int = M(lambda x: x)
     free = (id_int |oror| (M, id_int)) |compose| routed  
     
-    run = run(free, None, None).force()
+    _run = run(free, None, None).force()
     
-    print(run(Left(10)), run(Left(10)) == 33)          # (10+1)*3 = 33
-    print(run(Right("hi")), run(Right("hi")) == 4)     # len=2, sq=4
-    print(run(Right("abcd")), run(Right("abcd")) == 16)
+    print(_run(Left(10)), _run(Left(10)) == 33)          # (10+1)*3 = 33
+    print(_run(Right("hi")), _run(Right("hi")) == 4)     # len=2, sq=4
+    print(_run(Right("abcd")), _run(Right("abcd")) == 16)
 
     inc   = M(lambda x: x + 1)
     dbl   = M(lambda x: 2 * x)
@@ -290,11 +292,11 @@ if __name__ == "__main__":
     # whole : Either[int, Either[str, int]] -> str
     free = (inc |rcompose| tagL) |oror| (M, inner)
 
-    run = run(free, None, None).force()
+    _run = run(free, None, None).force()
     
-    print(run(Left(10)),             run(Left(10))             == "L:11")
-    print(run(Right(Left("hi"))),    run(Right(Left("hi")))    == "RL:HI")
-    print(run(Right(Right(7))),      run(Right(Right(7)))      == "RR:14")
+    print(_run(Left(10)),             _run(Left(10))             == "L:11")
+    print(_run(Right(Left("hi"))),    _run(Right(Left("hi")))    == "RL:HI")
+    print(_run(Right(Right(7))),      _run(Right(Right(7)))      == "RR:14")
 
         # --- Stop-or-continue with self-reference on the Right branch ---
     # Left means done. Right means continue by feeding back into the same graph.
@@ -302,9 +304,9 @@ if __name__ == "__main__":
     done = M(lambda x: x + 100)   # easy-to-see terminal action
     free = done |plusplus| (M, free)
 
-    run = run(free, None, None).force()
+    _run = run(free, None, None).force()
 
-    print("gated recursive Left:", run(Left(7)), run(Left(7)) == Left(107))
+    print("gated recursive Left:", _run(Left(7)), _run(Left(7)) == Left(107))
 
     # This is the recursive path.
     # It should keep re-entering the same expression if knot-tying worked.
