@@ -2,16 +2,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Generic, TypeVar
 
-from typeclass.protocols.semigroupoid import Semigroupoid
-from typeclass.protocols.category import Category
-from typeclass.protocols.arrow import Arrow
-from typeclass.protocols.arrowchoice import ArrowChoice
-from typeclass.protocols.arrowapply import ArrowApply
-from typeclass.protocols.arrowloop import ArrowLoop
+from typeclass.typeclasses.semigroupoid import Semigroupoid
+from typeclass.typeclasses.category import Category
+from typeclass.typeclasses.arrow import Arrow
+from typeclass.typeclasses.arrowchoice import ArrowChoice
+from typeclass.typeclasses.arrowapply import ArrowApply
+from typeclass.typeclasses.arrowloop import ArrowLoop
 
 from typeclass.data.either import Either, Left, Right
 
-from typeclass.protocols.force import Force
+from typeclass.typeclasses.force import Force
 
 A = TypeVar("A")
 B = TypeVar("B")

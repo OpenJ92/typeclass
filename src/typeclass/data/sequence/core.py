@@ -4,14 +4,14 @@ from typing import Generic, TypeVar, Callable, Iterable, Iterator
 from dataclasses import dataclass
 
 from typeclass.data.thunk import Thunk
-from typeclass.protocols.functor import Functor
-from typeclass.protocols.applicative import Applicative
-from typeclass.protocols.alternative import Alternative
-from typeclass.protocols.monad import Monad
-from typeclass.protocols.show import Show
-from typeclass.protocols.semigroup import Semigroup
-from typeclass.protocols.monoid import Monoid
-from typeclass.protocols.force import Force
+from typeclass.typeclasses.functor import Functor
+from typeclass.typeclasses.applicative import Applicative
+from typeclass.typeclasses.alternative import Alternative
+from typeclass.typeclasses.monad import Monad
+from typeclass.typeclasses.show import Show
+from typeclass.typeclasses.semigroup import Semigroup
+from typeclass.typeclasses.monoid import Monoid
+from typeclass.typeclasses.force import Force
 
 A = TypeVar("A")
 B = TypeVar("B")

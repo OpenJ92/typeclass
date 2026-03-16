@@ -1,18 +1,17 @@
-from typeclass.syntax.value import Value
-from typeclass.syntax.functor import Map 
-from typeclass.syntax.applicative import Ap, Pure
-from typeclass.syntax.alternative import Otherwise, Empty, Some, Many
-from typeclass.syntax.monad import Bind, Return
-from typeclass.syntax.comonad import Extract, Duplicate
-from typeclass.syntax.semigroupoid import Compose
-from typeclass.syntax.category import ID
-from typeclass.syntax.groupoid import Invert
-from typeclass.syntax.semigroup import Combine
-from typeclass.syntax.monoid import MEmpty
-from typeclass.syntax.group import Inverse
-from typeclass.syntax.arrow import Arr, First, Second, Split, Fanout
-from typeclass.syntax.arrowchoice import Left, Right, PlusPlus, OrOr
-from typeclass.syntax.arrowapply import Apply
+from typeclass.typeclasses.functor import Map 
+from typeclass.typeclasses.applicative import Ap, Pure
+from typeclass.typeclasses.alternative import Otherwise, Empty, Some, Many
+from typeclass.typeclasses.monad import Bind, Return
+from typeclass.typeclasses.comonad import Extract, Duplicate
+from typeclass.typeclasses.semigroupoid import Compose
+from typeclass.typeclasses.category import ID
+from typeclass.typeclasses.groupoid import Invert
+from typeclass.typeclasses.semigroup import Combine
+from typeclass.typeclasses.monoid import MEmpty
+from typeclass.typeclasses.group import Inverse
+from typeclass.typeclasses.arrow import Arr, First, Second, Split, Fanout
+from typeclass.typeclasses.arrowchoice import Left, Right, PlusPlus, OrOr
+from typeclass.typeclasses.arrowapply import Apply
 
 from typeclass.data.either import Left as ELeft, Right as ERight
 from typeclass.data.thunk import Thunk

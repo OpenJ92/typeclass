@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Callable, Generic, TypeVar
 
 from typeclass.data.morphism import Morphism
-from typeclass.protocols.groupoid import Groupoid
+from typeclass.typeclasses.groupoid import Groupoid
 
 A = TypeVar("A")
 B = TypeVar("B")

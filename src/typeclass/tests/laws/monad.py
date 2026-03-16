@@ -1,6 +1,6 @@
 from typing import Callable, TypeVar
-from typeclass.protocols.monad import Monad
-from typeclass.syntax.symbols import pure, bind, mthen, join, rbind, kleisli, rkleisli
+from typeclass.typeclasses.monad import Monad
+from typeclass.typeclasses.symbols import pure, bind, mthen, join, rbind, kleisli, rkleisli
 
 A = TypeVar("A")
 B = TypeVar("B")

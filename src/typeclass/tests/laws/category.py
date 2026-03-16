@@ -1,6 +1,6 @@
 from typing import TypeVar
-from typeclass.protocols.category import Category
-from typeclass.syntax.symbols import compose, rcompose, identity
+from typeclass.typeclasses.category import Category
+from typeclass.typeclasses.symbols import compose, rcompose, identity
 
 A = TypeVar("A")
 B = TypeVar("B")

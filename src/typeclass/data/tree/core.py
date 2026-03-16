@@ -3,11 +3,11 @@ from typing import Generic, TypeVar, Callable
 
 from typeclass.data.thunk import Thunk
 from typeclass.data.sequence import Sequence, Cons, Nil, concat
-from typeclass.protocols.functor import Functor
-from typeclass.protocols.applicative import Applicative
-from typeclass.protocols.show import Show
-from typeclass.protocols.eq import Eq
-from typeclass.protocols.force import Force
+from typeclass.typeclasses.functor import Functor
+from typeclass.typeclasses.applicative import Applicative
+from typeclass.typeclasses.show import Show
+from typeclass.typeclasses.eq import Eq
+from typeclass.typeclasses.force import Force
 
 A = TypeVar("A")
 B = TypeVar("B")

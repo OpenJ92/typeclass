@@ -4,13 +4,13 @@ from typing import Callable, Generic, TypeVar
 
 from typeclass.data.thunk import Thunk
 
-from typeclass.protocols.applicative import Applicative
-from typeclass.protocols.eq import Eq
-from typeclass.protocols.functor import Functor
-from typeclass.protocols.monad import Monad
-from typeclass.protocols.monoid import Monoid
-from typeclass.protocols.show import Show
-from typeclass.protocols.force import Force
+from typeclass.typeclasses.applicative import Applicative
+from typeclass.typeclasses.eq import Eq
+from typeclass.typeclasses.functor import Functor
+from typeclass.typeclasses.monad import Monad
+from typeclass.typeclasses.monoid import Monoid
+from typeclass.typeclasses.show import Show
+from typeclass.typeclasses.force import Force
 
 W = TypeVar("W", bound=Monoid)
 A = TypeVar("A")

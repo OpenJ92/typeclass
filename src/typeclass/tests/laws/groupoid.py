@@ -1,6 +1,6 @@
 from typing import TypeVar
-from typeclass.protocols.groupoid import Groupoid
-from typeclass.syntax.symbols import compose, identity, invert
+from typeclass.typeclasses.groupoid import Groupoid
+from typeclass.typeclasses.symbols import compose, identity, invert
 
 A = TypeVar("A")
 B = TypeVar("B")

@@ -1,6 +1,6 @@
 from typing import TypeVar
-from typeclass.protocols.applicative import Applicative
-from typeclass.syntax.symbols import pure, fmap, bind, empty, otherwise, some, many
+from typeclass.typeclasses.applicative import Applicative
+from typeclass.typeclasses.symbols import pure, fmap, bind, empty, otherwise, some, many
 
 A = TypeVar("A")
 
