@@ -14,18 +14,18 @@ if __name__ == "__main__":
     from typeclass.typeclasses.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
     compose, rcompose, identity, invert, combine, mempty, inverse, arrow, first, second, split, fanout, \
     left, right, plusplus, oror, apply
-    from typeclass.interpret.interpreter import interpret
+    from typeclass.run.interpreter import run
 
     free = Just(10) |fmap| (lambda x: x + 5)
-    result = interpret(free, None, None).force()
+    result = run(free, None, None).force()
     print(result, result == Just(15))
 
     free = Just |pure| (lambda x: lambda y: x + y) |ap| Just(10) |ap| Just(11)
-    result = interpret(free, None, None).force()
+    result = run(free, None, None).force()
     print(result, result == Just(21))
 
     free = Maybe |many| Thunk(lambda: empty(Maybe))
-    result = interpret(free, None, None).force()
+    result = run(free, None, None).force()
     print(result, result == Just([]))
 
     # v = empty Maybe (aka failure)
@@ -34,18 +34,18 @@ if __name__ == "__main__":
     expr_some = Maybe |some| v  # should be empty
     expr_many = Maybe |many| v  # should be Just([])
     
-    print("some(empty) =", interpret(expr_some, None, None).force())
-    print("many(empty) =", interpret(expr_many, None, None).force())
+    print("some(empty) =", run(expr_some, None, None).force())
+    print("many(empty) =", run(expr_many, None, None).force())
     
     # Now build something slightly richer:
     # many(empty) gives Just([])
     # liftA2 can combine two applicatives; this becomes Just(len([]) + 10) = Just(10)
     expr = liftA2(lambda xs, n: len(xs) + n, expr_many, Maybe |pure| 10)
-    print("liftA2(len(many(empty)) + 10) =", interpret(expr, None, None).force())
+    print("liftA2(len(many(empty)) + 10) =", run(expr, None, None).force())
     
     # Alternative fallback: empty <|> pure(99)  => Just(99)
     expr_alt = empty(Maybe) |otherwise| (Maybe |pure| 99)
-    print("empty <|> pure(99) =", interpret(expr_alt, None, None).force())
+    print("empty <|> pure(99) =", run(expr_alt, None, None).force())
 
 
     ## Parser Example
@@ -67,83 +67,83 @@ if __name__ == "__main__":
         return Parser(run)
 
     free = Parser |pure| _combine |ap| digit() |ap| digit()
-    result = interpret(free, None, None).force().run("42xyz")
+    result = run(free, None, None).force().run("42xyz")
     print(result, result == [(42, "xyz")])
 
     digits = Parser |many| digit()
-    result = interpret(digits, None, None).force().run("42xyz")
+    result = run(digits, None, None).force().run("42xyz")
     print(result, result == [(['4', '2'], "xyz")])
 
     whitespace = Parser |many| (char(" ") |otherwise| char("\t"))
-    result = interpret(whitespace, None, None).force().run(" \t42xyz")
+    result = run(whitespace, None, None).force().run(" \t42xyz")
     print(result, result == [([' ', '\t'], '42xyz')])
 
     number = Parser |some| digit() |fmap| (lambda xs: int("".join(xs)))
-    result = interpret(number, None, None).force().run("271828xyz")
+    result = run(number, None, None).force().run("271828xyz")
     print(result, result == [(271828, 'xyz')])
 
     def plus_one(x: int):
         return Just(x+1)
 
     free = Maybe |pure| 10 |bind| plus_one
-    result = interpret(free, None, None).force()
+    result = run(free, None, None).force()
     print(result, result == Just(11))
 
     free = digit() |bind| (lambda d: char(str(int(d) + 1)))
-    result = interpret(free, None, None).force().run("343")
+    result = run(free, None, None).force().run("343")
     print(result, result == [('4', '3')])
 
     free = Parser |many| free
-    result = interpret(free, None, None).force().run("123456789")
+    result = run(free, None, None).force().run("123456789")
     print(result, result == [(['2', '4', '6', '8'], '9')])
 
     free = Reader(lambda x: 10*x) |fmap| (lambda y: 5*str(y))
-    result = interpret(free, None, None).force().run(1)
+    result = run(free, None, None).force().run(1)
     print(result, result == "1010101010")
 
     free = Reader(lambda x: x + 1) |bind| (lambda y: Reader(lambda x: x + y))
-    result = interpret(free, None, None).force().run(10)
+    result = run(free, None, None).force().run(10)
     print(result, result == 21)
 
     free = Reader |pure| (lambda x: lambda y: (x, y)) \
                     |ap|    Reader(lambda x: x)       \
                     |ap|    Reader(lambda y: 2*y)
-    result = interpret(free, None, None).force().run(10)
+    result = run(free, None, None).force().run(10)
     print(result, result == (10,20))
 
     free = M(lambda x: x + 1) |compose| M(lambda y: y * y)
-    result = interpret(free, None, None).force()(10)
+    result = run(free, None, None).force()(10)
     print(result, result == 101)
 
     free = M(lambda x: x * x) |rcompose| M(lambda y: y + 1)
-    result = interpret(free, None, None).force()(10)
+    result = run(free, None, None).force()(10)
     print(result, result == 101)
 
     function = lambda x: x + 1
     forward  = identity(M) |compose| M(function)
     backward = M(function) |compose| identity(M)
-    fresult = interpret(forward, None, None).force()(10)
-    bresult = interpret(backward, None, None).force()(10)
+    fresult = run(forward, None, None).force()(10)
+    bresult = run(backward, None, None).force()(10)
     print(f"{fresult} == {bresult}", fresult == bresult)
 
     function = lambda x: lambda y: x + y
     _left  = (M(function(1)) |compose| M(function(2))) |compose| M(function(3))
     _right = M(function(1)) |compose| (M(function(2)) |compose| M(function(3)))
-    lresult = interpret(_left, None, None).force()(10)
-    rresult = interpret(_right, None, None).force()(10)
+    lresult = run(_left, None, None).force()(10)
+    rresult = run(_right, None, None).force()(10)
     print(f"{lresult} == {rresult}", lresult == rresult)
 
     from math import sqrt
     auto = Isomorphism(lambda x: x*x, sqrt)
     free = invert(auto)
     free = auto |compose| free
-    result = interpret(free, None, None).force()
+    result = run(free, None, None).force()
     print(result(0), result(0) == 0)
 
     _left = lambda x: x + 1
     _right = lambda x: x - 1
     endo = E(_left) |combine| E(_right)
-    result = interpret(endo, None, None).force()
+    result = run(endo, None, None).force()
     print(result(0), result(0) == 0)
 
     endo = E(_left)
@@ -151,8 +151,8 @@ if __name__ == "__main__":
     forward = endo |combine| identity
     backward = identity |combine| endo
 
-    fresult = interpret(forward, None, None).force()
-    bresult = interpret(backward, None, None).force()
+    fresult = run(forward, None, None).force()
+    bresult = run(backward, None, None).force()
 
     print(f"{fresult(10)} == {bresult(10)}", fresult(10) == bresult(10))
 
@@ -160,12 +160,12 @@ if __name__ == "__main__":
     auto = Automorphism(cos, acos)
     ainv = inverse(auto)
     back = ainv |combine| auto
-    bresult = interpret(back, None, None).force()
+    bresult = run(back, None, None).force()
 
     print(bresult(pi), bresult(pi) == pi)
 
     free = (endo |split| (E, endo)) |compose| (endo |fanout| (E, endo))
-    result = interpret(free, None, None).force()
+    result = run(free, None, None).force()
     print(f"{result(10)} == (12,12)", result(10) == (12,12))
 
     def add(pair):
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     free = (M |arrow| flatten)                                      \
          |compose| (endo |split| (E, endo) |split| (E, E(_right))) \
          |compose| (endo |fanout| (E, endo) |fanout| (E, endo))
-    result_ = interpret(free, None, None).force()
+    result_ = run(free, None, None).force()
     print(f"{result_(10)} == ((12,12), 10)", result_(10) == (12,12,10))
 
     deep = M |arrow| flatten \
@@ -191,17 +191,17 @@ if __name__ == "__main__":
          |compose| (endo |split|  (E, endo) |split|  (E, endo) |split|  (E, endo)) \
          |compose| (endo |split|  (E, endo) |split|  (E, endo) |split|  (E, endo)) \
          |compose| (endo |fanout| (E, endo) |fanout| (E, endo) |fanout| (E, endo))              
-    result = interpret(deep, None, None).force()
+    result = run(deep, None, None).force()
 
     inc = M(lambda x: x + 1)
 
     free = E |second| inc
-    result = interpret(free, None, None).force()((10, 20))
+    result = run(free, None, None).force()((10, 20))
     print(result, result == (10, 21))
 
     # second composed with first
     free = (E |first| inc) |compose| free
-    result = interpret(free, None, None).force()((10, 20))
+    result = run(free, None, None).force()((10, 20))
     # first:  (10,20) -> (11,20)
     # second: (11,20) -> (11,21)
     print(result, result == (11, 21))
@@ -209,12 +209,12 @@ if __name__ == "__main__":
     inc = M(lambda x: x + 1)
 
     free = M |left| inc
-    run = interpret(free, None, None).force()
+    run = run(free, None, None).force()
     print(run(Left(10)),  run(Left(10))  == Left(11))
     print(run(Right("x")), run(Right("x")) == Right("x"))
 
     free = M |right| inc
-    run = interpret(free, None, None).force()
+    run = run(free, None, None).force()
     print(run(Left("x")),  run(Left("x"))  == Left("x"))
     print(run(Right(10)),  run(Right(10))  == Right(11))
 
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     dbl = M(lambda x: 2 * x)
 
     free = inc |plusplus| (M, dbl)
-    run = interpret(free, None, None).force()
+    run = run(free, None, None).force()
 
     print(run(Left(10)),   run(Left(10))   == Left(11))   # Left branch uses inc
     print(run(Right(10)),  run(Right(10))  == Right(20))  # Right branch uses dbl
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     dbl = M(lambda x: 2 * x)
 
     free = inc |oror| (M, dbl)
-    run = interpret(free, None, None).force()
+    run = run(free, None, None).force()
 
     print(run(Left(10)),   run(Left(10))   == 11)  # Left branch returns B
     print(run(Right(10)),  run(Right(10))  == 20)  # Right branch returns B
@@ -244,7 +244,7 @@ if __name__ == "__main__":
     cont = M(lambda x: x + 1000)     # A -> B (just to show different path)
 
     free = done |oror| (M, cont)
-    run = interpret(free, None, None).force()
+    run = run(free, None, None).force()
     print(run(Left(7)),   run(Left(7))   == 7)
     print(run(Right(7)),  run(Right(7))  == 1007)
 
@@ -262,7 +262,7 @@ if __name__ == "__main__":
     # Route: Either[int, str] -> Either[int, int]
     routed = left_prog |plusplus| (M, right_prog)
 
-    run_routed = interpret(routed, None, None).force()
+    run_routed = run(routed, None, None).force()
     print("routed Left:", run_routed(Left(10)))
     print("routed Right:", run_routed(Right("hi")))
     
@@ -270,7 +270,7 @@ if __name__ == "__main__":
     id_int = M(lambda x: x)
     free = (id_int |oror| (M, id_int)) |compose| routed  
     
-    run = interpret(free, None, None).force()
+    run = run(free, None, None).force()
     
     print(run(Left(10)), run(Left(10)) == 33)          # (10+1)*3 = 33
     print(run(Right("hi")), run(Right("hi")) == 4)     # len=2, sq=4
@@ -290,7 +290,7 @@ if __name__ == "__main__":
     # whole : Either[int, Either[str, int]] -> str
     free = (inc |rcompose| tagL) |oror| (M, inner)
 
-    run = interpret(free, None, None).force()
+    run = run(free, None, None).force()
     
     print(run(Left(10)),             run(Left(10))             == "L:11")
     print(run(Right(Left("hi"))),    run(Right(Left("hi")))    == "RL:HI")
@@ -302,7 +302,7 @@ if __name__ == "__main__":
     done = M(lambda x: x + 100)   # easy-to-see terminal action
     free = done |plusplus| (M, free)
 
-    run = interpret(free, None, None).force()
+    run = run(free, None, None).force()
 
     print("gated recursive Left:", run(Left(7)), run(Left(7)) == Left(107))
 
@@ -314,7 +314,7 @@ if __name__ == "__main__":
     
     base = step |oror| (M, M(lambda n: n))
     
-    run_base = interpret(base, None, None).force()
+    run_base = run(base, None, None).force()
     print(run_base(Left(10)))    # 0
     print(run_base(Right(30)))   # 3
 
@@ -328,13 +328,13 @@ if __name__ == "__main__":
     # 1. fmap over a leaf
     t = leaf(10)
     expr = t |fmap| (lambda x: x + 1)
-    print(interpret(expr, None, None).force())
+    print(run(expr, None, None).force())
     # expected: Tree(11, Nil())
     
     # 2. fmap over one level of children
     t = Tree( 10, from_iterable([ leaf(1), leaf(2), ]))
     mapped = t |fmap| (lambda x: x * 2)
-    print(interpret(mapped, None, None).force())
+    print(run(mapped, None, None).force())
     # expected root 20, children 2 and 4
     
     # 3. applicative over same shape
@@ -343,14 +343,14 @@ if __name__ == "__main__":
     tx = Tree( 10, from_iterable([ leaf(3), leaf(8), ]))
     
     applied = tf |ap| tx
-    print(interpret(applied, None, None).force())
+    print(run(applied, None, None).force())
     # expected root 110, children 6 and 7
     
     # 4. truncation behavior
     tf_short = Tree( lambda x: x + 100, from_iterable([ leaf(lambda x: x * 2), ]))
     
     trunc = tf_short |ap| tx
-    print(interpret(trunc, None, None).force())
+    print(run(trunc, None, None).force())
     # expected root 110, only one child: 6
 
     big = Tree(

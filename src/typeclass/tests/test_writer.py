@@ -2,7 +2,7 @@ import unittest
 
 from typeclass.data.writer import Writer
 from typeclass.data.sequence import Sequence, Cons, Nil
-from typeclass.interpret.interpreter import interpret
+from typeclass.interpret.run import run
 from typeclass.tests.fixtures import writer as fx_writer
 
 from typeclass.tests.laws.functor import (
@@ -35,8 +35,8 @@ from typeclass.tests.laws.monad import (
 class WriterTestCase(unittest.TestCase):
     def assert_expr_equal(self, lhs, rhs):
         self.assertEqual(
-            interpret(lhs, None, None).force(),
-            interpret(rhs, None, None).force(),
+            run(lhs, None, None).force(),
+            run(rhs, None, None).force(),
         )
 
 
