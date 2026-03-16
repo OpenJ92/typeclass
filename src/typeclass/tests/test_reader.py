@@ -1,7 +1,7 @@
 import unittest
 
 from typeclass.data.reader import Reader
-from typeclass.interpret.interpreter import interpret
+from typeclass.interpret.run import run
 from typeclass.tests.fixtures import reader as fx_reader
 
 from typeclass.tests.laws.functor import (
@@ -33,8 +33,8 @@ from typeclass.tests.laws.monad import (
 
 class ReaderTestCase(unittest.TestCase):
     def assert_reader_expr_equal(self, lhs, rhs):
-        lhs_reader = interpret(lhs, None, None).force()
-        rhs_reader = interpret(rhs, None, None).force()
+        lhs_reader = run(lhs, None, None).force()
+        rhs_reader = run(rhs, None, None).force()
 
         for env in fx_reader.envs():
             with self.subTest(env=env):

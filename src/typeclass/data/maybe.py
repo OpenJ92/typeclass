@@ -1,12 +1,12 @@
 from __future__ import annotations
 from typing import Generic, TypeVar, Callable, Iterable
 
-from typeclass.protocols.functor import Functor
-from typeclass.protocols.applicative import Applicative
-from typeclass.protocols.alternative import Alternative
-from typeclass.protocols.monad import Monad
-from typeclass.protocols.show import Show
-from typeclass.protocols.eq import Eq
+from typeclass.typeclasses.functor import Functor
+from typeclass.typeclasses.applicative import Applicative
+from typeclass.typeclasses.alternative import Alternative
+from typeclass.typeclasses.monad import Monad
+from typeclass.typeclasses.show import Show
+from typeclass.typeclasses.eq import Eq
 
 A = TypeVar("A")
 B = TypeVar("B")

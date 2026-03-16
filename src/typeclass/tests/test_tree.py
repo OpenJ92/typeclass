@@ -1,7 +1,7 @@
 import unittest
 
 from typeclass.data.tree import Tree
-from typeclass.interpret.interpreter import interpret
+from typeclass.interpret.run import run
 from typeclass.tests.fixtures import tree as fx_tree
 from typeclass.tests.laws.functor import (
     functor_identity_expr,
@@ -34,8 +34,8 @@ from typeclass.tests.laws.monad import (
 class TreeTestCase(unittest.TestCase):
     def assert_expr_equal(self, lhs, rhs):
         self.assertEqual(
-            interpret(lhs, None, None).force(),
-            interpret(rhs, None, None).force(),
+            run(lhs, None, None).force(),
+            run(rhs, None, None).force(),
         )
 
 

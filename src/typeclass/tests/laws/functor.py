@@ -1,6 +1,6 @@
 from typing import Callable, TypeVar
-from typeclass.protocols.functor import Functor
-from typeclass.syntax.symbols import fmap, replace, void
+from typeclass.typeclasses.functor import Functor
+from typeclass.typeclasses.symbols import fmap, replace, void
 
 A = TypeVar("A")
 B = TypeVar("B")

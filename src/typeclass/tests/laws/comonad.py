@@ -1,7 +1,7 @@
 from typing import Callable, TypeVar
-from typeclass.protocols.comonad import Comonad
-from typeclass.syntax.symbols import fmap, extract, duplicate, extend
-from typeclass.interpret.interpreter import evaluated
+from typeclass.typeclasses.comonad import Comonad
+from typeclass.typeclasses.symbols import fmap, extract, duplicate, extend
+from typeclass.runtime.core import evaluated
 
 A = TypeVar("A")
 B = TypeVar("B")

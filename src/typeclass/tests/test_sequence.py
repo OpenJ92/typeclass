@@ -1,7 +1,7 @@
 import unittest
 
 from typeclass.data.sequence import Sequence
-from typeclass.interpret.interpreter import interpret
+from typeclass.interpret.run import run
 from typeclass.tests.fixtures import sequence as fx_sequence
 
 from typeclass.tests.laws.functor import (
@@ -39,8 +39,8 @@ from typeclass.tests.laws.monoid import (
 class SequenceTestCase(unittest.TestCase):
     def assert_expr_equal(self, lhs, rhs):
         self.assertEqual(
-            interpret(lhs, None, None).force(),
-            interpret(rhs, None, None).force(),
+            run(lhs, None, None).force(),
+            run(rhs, None, None).force(),
         )
 
 

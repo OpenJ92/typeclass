@@ -18,7 +18,7 @@ from typeclass.data.stream.lib import (
     _repeat_last,
     _prefix,
 )
-from typeclass.interpret.interpreter import evaluated
+from typeclass.runtime.core import evaluated
 
 repeat         = evaluated(_repeat)
 iterate        = evaluated(_iterate)

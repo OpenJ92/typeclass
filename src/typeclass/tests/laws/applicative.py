@@ -1,6 +1,6 @@
 from typing import Callable, TypeVar
-from typeclass.protocols.applicative import Applicative
-from typeclass.syntax.symbols import fmap, pure, ap, then, skip, liftA2
+from typeclass.typeclasses.applicative import Applicative
+from typeclass.typeclasses.symbols import fmap, pure, ap, then, skip, liftA2
 
 A = TypeVar("A")
 B = TypeVar("B")

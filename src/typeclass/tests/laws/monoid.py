@@ -1,6 +1,6 @@
 from typing import TypeVar
-from typeclass.protocols.monoid import Monoid
-from typeclass.syntax.symbols import combine, mempty
+from typeclass.typeclasses.monoid import Monoid
+from typeclass.typeclasses.symbols import combine, mempty
 
 A = TypeVar("A", bound=Monoid)
 

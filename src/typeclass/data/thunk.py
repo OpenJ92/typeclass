@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Callable, Generic, TypeVar
 
-from typeclass.protocols.force import Force
+from typeclass.typeclasses.force import Force
 
 T = TypeVar("T")
 
@@ -23,3 +23,13 @@ class Thunk(Force[T], Generic[T]):
     def __repr__(self):
         return f"Thunk({self._value!r})" if self._evaluated else "Thunk(<unevaluated>)"
 
+
+def delay(value: T) -> Thunk[T]:
+    return Thunk(lambda: value)
+
+
+def suspend(fn, *args, **kwargs):
+    return Thunk(lambda: fn(*args, **kwargs))
+
+def resume(fn, *args, **kwargs):
+    return Thunk(lambda: fn(*args, **kwargs).force())
