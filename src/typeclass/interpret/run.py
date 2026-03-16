@@ -14,42 +14,13 @@ from typeclass.typeclasses.arrowchoice import Left, Right, PlusPlus, OrOr
 from typeclass.typeclasses.arrowapply import Apply
 
 from typeclass.data.either import Left as ELeft, Right as ERight
-from typeclass.data.thunk import Thunk
+from typeclass.data.thunk import Thunk, suspend, delay, resume
 
-from functools import wraps
-from inspect import signature
-
-def realize(expression):
+def interpret(expression):
     return run(expression, None, None)
+
 def evaluate(expression):
-    return realize(expression).force()
-def curry(fn):
-    arity = len(signature(fn).parameters)
-
-    @wraps(fn)
-    def curried(*args):
-        if len(args) >= arity:
-            return fn(*args)
-        return lambda *more: curried(*(args + more))
-    return curried
-def runed(fn):
-    @wraps(fn)
-    def wrapped(*args, **kwargs):
-        return fn(
-            *[realize(a) for a in args],
-            **{k: realize(v) for k, v in kwargs.items()},
-        )
-    return wrapped
-
-
-def evaluated(fn):
-    @wraps(fn)
-    def wrapped(*args, **kwargs):
-        return fn(
-            *[evaluate(a) for a in args],
-            **{k: evaluate(v) for k, v in kwargs.items()},
-        )
-    return wrapped
+    return interpret(expression).force()
 
 def run(free, cofree, env):
     """
@@ -98,125 +69,121 @@ def run(free, cofree, env):
         # delegating to the runtime Functor implementation.
 
         case Map(function, value):
-            value = run(value.force(), None, None).force()
-            function = run(function.force(), None, None)
+            value = run(value.force(), cofree, env).force()
+            function = run(function.force(), cofree, env)
 
             def k(a):
-                return run(function.force()(a), None, None).force()
+                return run(function.force()(a), cofree, env).force()
 
-            return Thunk(lambda: value.fmap(Thunk(lambda: k)))
+            return suspend(value.fmap, delay(k))
 
         # ----- Applicative -----------------------------------------------------
         # Implements fmap by runing both the function and value, then
         # delegating to the runtime Functor implementation.
             
         case Pure(cls, value):
-            value = run(value.force(), None, None).force()
-            return Thunk(lambda: cls.pure(value))
+            value = run(value.force(), cofree, env).force()
+            return suspend(cls.pure, value)
 
         case Ap(function, value):
-            function = run(function.force(), None, None).force()
-            value    = run(value.force(), None, None)
-            return Thunk(lambda: function.ap(value))
+            function = run(function.force(), cofree, env).force()
+            value    = run(value.force(), cofree, env)
+            return suspend(function.ap, value)
 
         # ----- Alternative -----------------------------------------------------
         # Implements empty, otherwise, and the derived combinators some/many.
         # some/many are lowered into pure/ap/otherwise expressions.
 
         case Empty(cls):
-            return Thunk(lambda: cls.empty())
+            return suspend(cls.empty)
 
         case Otherwise(alter, native):
-            alter  = run(alter.force(), None, None).force()
-            native = run(native.force(), None, None)
-            return Thunk(lambda: alter.otherwise(native))
+            alter  = run(alter.force(), cofree, env).force()
+            native = run(native.force(), cofree, env)
+            return suspend(alter.otherwise, native)
         
         case Many(cls, value):
-            some = Thunk(lambda: Some(cls, value))
-            pure = Thunk(lambda: Pure(cls, Thunk(lambda: [])))
-            otherwise = Otherwise(some, pure)
-            return Thunk(lambda: run(otherwise, None, None).force())
+            lowered = Otherwise(delay(Some(cls, value)), delay(Pure(cls, delay([]))))
+            return resume(run, lowered, cofree, env)
 
         case Some(cls, value):
-            cons = Thunk(lambda: (lambda x: (lambda xs: [x] + xs)))
-            _map  = Thunk(lambda: Map(cons, value))
-            many = Thunk(lambda: Many(cls, value))
-            ap   = Ap(_map, many)
-            return Thunk(lambda: run(ap, None, None).force())
+            cons = delay(lambda x: (lambda xs: [x] + xs))
+            lowered = Ap(delay(Map(cons, value)), delay(Many(cls, value)))
+            return resume(run, lowered, cofree, env)
 
         # ----- Monad -----------------------------------------------------------
         # Implements empty, otherwise, and the derived combinators some/many.
         # some/many are lowered into pure/ap/otherwise expressions.
 
         case Return(cls, value):
-            value = run(value.force(), None, None).force()
-            return Thunk(lambda: cls.pure(value))
+            value = run(value.force(), cofree, env).force()
+            return suspend(cls.pure, value)
 
         case Bind(ma, f):
-            ma = run(ma.force(), None, None).force()
-            f = run(f.force(), None, None)
+            ma = run(ma.force(), cofree, env).force()
+            f = run(f.force(), cofree, env)
 
             def k(a):
-                return run(f.force()(a), None, None).force()
+                return run(f.force()(a), cofree, env).force()
 
-            return Thunk(lambda: ma.bind(Thunk(lambda: k)))
+            return suspend(ma.bind, delay(k))
 
         # ----- Comonad ---------------------------------------------------------
         # Core Comonad operations. `extend` is derived and lowered through
         # `duplicate` and `fmap`, so only extract and duplicate are primitive.
 
         case Extract(wa):
-            wa = run(wa.force(), None, None).force()
-            return Thunk(lambda: wa.extract())
+            wa = run(wa.force(), cofree, env).force()
+            return suspend(wa.extract)
 
         case Duplicate(wa):
-            wa = run(wa.force(), None, None).force()
-            return Thunk(lambda: wa.duplicate())
+            wa = run(wa.force(), cofree, env).force()
+            return suspend(wa.duplicate)
 
         # ----- Semigroupoid -----------------------------------------------------
         # Sequential composition of morphisms.
 
         case Compose(fbc, fab):
-            fbc = run(fbc.force(), None, None).force()
-            fab = run(fab.force(), None, None)
+            fbc = run(fbc.force(), cofree, env).force()
+            fab = run(fab.force(), cofree, env)
 
-            return Thunk(lambda: fbc.compose(fab))
+            return suspend(fbc.compose, fab)
 
         # ----- Category ---------------------------------------------------------
         # Identity morphism.
 
         case ID(cls):
-            return Thunk(lambda: cls.id())
+            return suspend(cls.id)
 
         # ----- Groupoid ---------------------------------------------------------
         # Identity morphism.
 
         case Invert(fab):
-            fab = run(fab.force(), None, None).force()
-            return Thunk(lambda: fab.invert())
+            fab = run(fab.force(), cofree, env).force()
+            return suspend(fab.invert)
 
         # ----- Semigroup --------------------------------------------------------
         # Binary associative combination.
 
         case Combine(a, b):
-            a = run(a.force(), None, None).force()
-            b = run(b.force(), None, None)
+            a = run(a.force(), cofree, env).force()
+            b = run(b.force(), cofree, env)
 
-            return Thunk(lambda: a.combine(b))
+            return suspend(a.combine, b)
 
         # ----- Monoid -----------------------------------------------------------
         # Identity element for a Semigroup.
 
         case MEmpty(cls):
-            return Thunk(lambda: cls.mempty())
+            return suspend(cls.mempty)
 
         # ----- Group ------------------------------------------------------------
         # Inversion operation for Group structures.
 
         case Inverse(fab):
-            fab = run(fab.force(), None, None).force()
+            fab = run(fab.force(), cofree, env).force()
 
-            return Thunk(lambda: fab.inverse())
+            return suspend(fab.inverse)
 
         # ----- Arrow ------------------------------------------------------------
         # Core Arrow operations and derived combinators expressed in terms of
@@ -225,43 +192,43 @@ def run(free, cofree, env):
 
         case Arr(cls, fab):
             def k(a):
-                return run(fab.force(), None, None).force()(a)
-            return Thunk(lambda: cls.arrow(Thunk(lambda: k)))
+                return run(fab.force(), cofree, env).force()(a)
+            return suspend(cls.arrow, delay(k))
 
         case First(cls, aab):
             def k(a):
-                return run(aab.force(), None, None).force()(a)
-            return Thunk(lambda: cls.first(Thunk(lambda: k)))
+                return run(aab.force(), cofree, env).force()(a)
+            return suspend(cls.first, delay(k))
 
         case Second(cls, aab):
             def swap(pair):
                 x, y = pair
                 return (y, x)
 
-            arrswap = Thunk(lambda: Arr(cls, Thunk(lambda: swap)))
-            first   = Thunk(lambda: First(cls, aab))
+            arrswap = delay(Arr(cls, delay(swap)))
+            first   = delay(First(cls, aab))
 
-            one  = Thunk(lambda: Compose(first, arrswap))
+            one  = delay(Compose(first, arrswap))
             comp = Compose(arrswap, one)
 
-            return Thunk(lambda: run(comp, None, None).force())
+            return resume(run, comp, cofree, env)
 
         case Split(cls, aab, acd):
-            first_  = Thunk(lambda: First(cls, aab))
-            second_ = Thunk(lambda: Second(cls, acd))
+            first_  = delay(First(cls, aab))
+            second_ = delay(Second(cls, acd))
 
             comp = Compose(second_, first_)
-            return Thunk(lambda: run(comp, None, None).force())
+            return resume(run, comp, cofree, env)
 
         case Fanout(cls, aab, aac):
             def duplicate(a):
                 return (a, a)
             
-            arrduplicate = Thunk(lambda: Arr(cls, Thunk(lambda: duplicate)))
-            split = Thunk(lambda: Split(cls, aab, aac))
+            arrduplicate = delay(Arr(cls, delay(duplicate)))
+            split = delay(Split(cls, aab, aac))
             comp = Compose(split, arrduplicate)
 
-            return Thunk(lambda: run(comp, None, None).force())
+            return resume(run, comp, cofree, env)
 
         # ----- ArrowChoice  -----------------------------------------------------
         # Core Arrow operations and derived combinators expressed in terms of
@@ -270,8 +237,8 @@ def run(free, cofree, env):
 
         case Left(cls, aab):
             def k(a):
-                return run(aab.force(), None, None).force()(a)
-            return Thunk(lambda: cls.left(Thunk(lambda: k)))
+                return run(aab.force(), cofree, env).force()(a)
+            return suspend(cls.left, delay(k))
 
         case Right(cls, aab):
             def swap(e):
@@ -281,19 +248,19 @@ def run(free, cofree, env):
                     case ERight(x):
                         return ELeft(x)
 
-            arrswap = Thunk(lambda: Arr(cls, Thunk(lambda: swap)))
-            left_   = Thunk(lambda: Left(cls, aab))
+            arrswap = delay(Arr(cls, delay(swap)))
+            left_   = delay(Left(cls, aab))
 
-            one  = Thunk(lambda: Compose(left_, arrswap))
+            one  = delay(Compose(left_, arrswap))
             comp = Compose(arrswap, one)
 
-            return Thunk(lambda: run(comp, None, None).force())
+            return resume(run, comp, cofree, env)
 
         case PlusPlus(cls, aab, acd):
-            left_  = Thunk(lambda: Left(cls, aab))
-            right_ = Thunk(lambda: Right(cls, acd))
+            left_  = delay(Left(cls, aab))
+            right_ = delay(Right(cls, acd))
             comp   = Compose(right_, left_)
-            return Thunk(lambda: run(comp, None, None).force())
+            return resume(run, comp, cofree, env)
 
         case OrOr(cls, aab, acb):
             def merge(e):
@@ -303,21 +270,61 @@ def run(free, cofree, env):
                     case ERight(b):
                         return b
 
-            ppg = Thunk(lambda: PlusPlus(cls, aab, acb))
-            arrmerge = Thunk(lambda: Arr(cls, Thunk(lambda: merge)))
+            ppg = delay(PlusPlus(cls, aab, acb))
+            arrmerge = delay(Arr(cls, delay(merge)))
 
             comp = Compose(arrmerge, ppg)
-            return Thunk(lambda: run(comp, None, None).force())
+            return resume(run, comp, cofree, env)
 
         # ----- ArrowApply  -----------------------------------------------------
         # Dynamic arrow application. Allows an arrow produced at runtime to be
         # immediately applied.
 
         case Apply(cls):
-            return Thunk(lambda: run(cls.app(), None, None).force())
+            return resume(run, cls.app(), cofree, env)
 
         # ----- Base ------------------------------------------------------------
         # Base case: already a runtime value.
 
         case _:
             return Thunk(lambda: free)
+
+## from typeclass.typeclasses.functor.interpret import HANDLERS as FUNCTOR
+## from typeclass.typeclasses.applicative.interpret import HANDLERS as APPLICATIVE
+## from typeclass.typeclasses.alternative.interpret import HANDLERS as ALTERNATIVE
+## from typeclass.typeclasses.monad.interpret import HANDLERS as MONAD
+## from typeclass.typeclasses.comonad.interpret import HANDLERS as COMONAD
+## from typeclass.typeclasses.semigroupoid.interpret import HANDLERS as SEMIGROUPOID
+## from typeclass.typeclasses.category.interpret import HANDLERS as CATEGORY
+## from typeclass.typeclasses.groupoid.interpret import HANDLERS as GROUPOID
+## from typeclass.typeclasses.semigroup.interpret import HANDLERS as SEMIGROUP
+## from typeclass.typeclasses.monoid.interpret import HANDLERS as MONOID
+## from typeclass.typeclasses.group.interpret import HANDLERS as GROUP
+## from typeclass.typeclasses.arrow.interpret import HANDLERS as ARROW
+## from typeclass.typeclasses.arrowchoice.interpret import HANDLERS as ARROWCHOICE
+## from typeclass.typeclasses.arrowapply.interpret import HANDLERS as ARROWAPPLY
+## 
+## HANDLERS = {}
+## for group in (
+##     FUNCTOR,
+##     APPLICATIVE,
+##     ALTERNATIVE,
+##     MONAD,
+##     COMONAD,
+##     SEMIGROUPOID,
+##     CATEGORY,
+##     GROUPOID,
+##     SEMIGROUP,
+##     MONOID,
+##     GROUP,
+##     ARROW,
+##     ARROWCHOICE,
+##     ARROWAPPLY,
+## ):
+##     HANDLERS.update(group)
+## 
+## def run(expr, cofree=None, env=None):
+##     handler = HANDLERS.get(type(expr))
+##     if handler is None:
+##         return expr
+##     return handler(expr, run, cofree, env)
