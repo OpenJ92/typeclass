@@ -1,4 +1,4 @@
-from typeclass.data.sequence.core import Sequence, Cons, Nil, concat
+from typeclass.data.sequence.core import Sequence, Cons, Nil, concat, reverse
 
 from typing import TypeVar, Callable
 

@@ -1,5 +1,4 @@
-from __future__ import annotations
-from typing import Generic, TypeVar, Callable, Iterable, Iterator
+from typing import Generic, TypeVar, Callable, Iterator
 
 from dataclasses import dataclass
 
@@ -16,18 +15,58 @@ from typeclass.typeclasses.force import Force
 A = TypeVar("A")
 B = TypeVar("B")
 
-@dataclass(frozen=True)
-class Sequence(Monoid, Semigroup, Monad[A], Alternative, Applicative[A], Functor[A], Show, Generic[A]):
 
+def reverse(xs: Sequence[A]) -> Sequence[A]:
+    out: Sequence[A] = Nil()
+    cur = xs
+    while isinstance(cur, Cons):
+        out = Cons(cur.head, out)
+        cur = cur.tail
+    return out
+
+
+def concat(xs: Sequence[A], ys: Sequence[A]) -> Sequence[A]:
+    """
+    Stack-safe append.
+    """
+    rev = reverse(xs)
+    out: Sequence[A] = ys
+    cur = rev
+    while isinstance(cur, Cons):
+        out = Cons(cur.head, out)
+        cur = cur.tail
+    return out
+
+
+@dataclass(
+    frozen=True,
+    eq=False,
+    repr=False,
+    order=False,
+    unsafe_hash=False
+    )
+class Sequence(
+    Monoid,
+    Semigroup,
+    Monad[A],
+    Alternative,
+    Applicative[A],
+    Functor[A],
+    Show,
+    Generic[A],
+):
     # ----- Functor ---------------------------------------------------------
 
     def fmap(self: Sequence[A], f: Force[Callable[[A], B]]) -> Sequence[B]:
         _f = f.force()
-        match self:
-            case Cons(head=h, tail=t):
-                return Cons(_f(h), t.fmap(f))
-            case Nil():
-                return Nil()
+
+        rev: Sequence[B] = Nil()
+        cur = self
+        while isinstance(cur, Cons):
+            rev = Cons(_f(cur.head), rev)
+            cur = cur.tail
+
+        return reverse(rev)
 
     # ----- Applicative -----------------------------------------------------
 
@@ -39,15 +78,20 @@ class Sequence(Monoid, Semigroup, Monad[A], Alternative, Applicative[A], Functor
         """
         Cartesian product applicative:
           [f1,f2] <*> [a,b] = [f1(a), f1(b), f2(a), f2(b)]
+        Stack-safe, preserves order.
         """
-        fs = self
         xs = fa.force()
+        out: Sequence[B] = Nil()
 
-        match fs:
-            case Cons(head=f, tail=rest):
-                return concat(xs.fmap(Thunk(lambda: f)), rest.ap(fa))
-            case Nil():
-                return Nil()
+        # Build in reverse function order so final reverse gives original order.
+        fs_rev = reverse(self)
+        cur_f = fs_rev
+        while isinstance(cur_f, Cons):
+            mapped = xs.fmap(Thunk(lambda f=cur_f.head: f))
+            out = concat(reverse(mapped), out)
+            cur_f = cur_f.tail
+
+        return reverse(out)
 
     # ----- Alternative -----------------------------------------------------
 
@@ -61,41 +105,51 @@ class Sequence(Monoid, Semigroup, Monad[A], Alternative, Applicative[A], Functor
     # ----- Monad -----------------------------------------------------------
 
     def bind(self: Sequence[A], mf: Force[Callable[[A], Sequence[B]]]) -> Sequence[B]:
+        """
+        Stack-safe flatMap, preserves order.
+        """
         mf_ = mf.force()
+        out: Sequence[B] = Nil()
 
-        match self:
-            case Cons(head=h, tail=t):
-                return concat(mf_(h), t.bind(mf))
-            case Nil():
-                return Nil()
+        cur = reverse(self)
+        while isinstance(cur, Cons):
+            chunk = mf_(cur.head)
+            out = concat(chunk, out)
+            cur = cur.tail
 
-    # ----- Semigroup -----------------------------------------------------
+        return out
+
+    # ----- Semigroup -------------------------------------------------------
 
     def combine(self: Sequence[A], other: Force[Sequence[B]]):
         return concat(self, other.force())
 
-    # ----- Monoid --------------------------------------------------------
+    # ----- Monoid ----------------------------------------------------------
 
     @classmethod
     def mempty(cls):
         return Nil()
 
-    # ----- Show ----------------------------------------------------------
+    # ----- Show ------------------------------------------------------------
 
     def __repr__(self) -> str:
         return f"Sequence({list(iter(self))!r})"
 
-    # ----- Eq ------------------------------------------------------------
+    # ----- Eq --------------------------------------------------------------
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Sequence):
+            return False
 
-    def __eq__(self: Sequence[A], other: Sequence[A]) -> bool:
-        match (self, other):
-            case (Cons(head=x, tail=xs), Cons(head=y, tail=ys)):
-                return  x == y and xs == ys
-            case (Nil(), Nil()):
-                return True
-            case _:
+        cur1 = self
+        cur2 = other
+
+        while isinstance(cur1, Cons) and isinstance(cur2, Cons):
+            if cur1.head != cur2.head:
                 return False
-        return True
+            cur1 = cur1.tail
+            cur2 = cur2.tail
+
+        return isinstance(cur1, Nil) and isinstance(cur2, Nil)
 
     # ----- Convenience -----------------------------------------------------
 
@@ -110,19 +164,17 @@ class Sequence(Monoid, Semigroup, Monad[A], Alternative, Applicative[A], Functor
                     return
 
 
-@dataclass(frozen=True)
-class Cons(Sequence[A]): 
+@dataclass(frozen=True, eq=False, repr=False, order=False, unsafe_hash=False)
+class Cons(Sequence[A]):
     head: A
     tail: Sequence[A]
 
+    def __repr__(self) -> str:
+        return Sequence.__repr__(self)
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, eq=False, repr=False, order=False, unsafe_hash=False)
 class Nil(Sequence[A]):
-    pass
-
-def concat(xs: Sequence[A], ys: Sequence[A]) -> Sequence[A]:
-    match xs:
-        case Cons(head=head, tail=tail):
-            return Cons(head, concat(tail,ys))
-        case Nil():
-            return ys
+    def __repr__(self) -> str:
+        return Sequence.__repr__(self)
+    
