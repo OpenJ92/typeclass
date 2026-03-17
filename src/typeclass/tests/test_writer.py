@@ -1,7 +1,7 @@
 import unittest
 
 from typeclass.data.writer import Writer
-from typeclass.data.sequence import Sequence, Cons, Nil
+from typeclass.data.sequence import Sequence
 from typeclass.interpret.run import run
 from typeclass.tests.fixtures import writer as fx_writer
 
@@ -145,8 +145,8 @@ class TestWriterApplicative(WriterTestCase):
 class TestWriterMonad(WriterTestCase):
     def test_monad_left_identity(self):
         funcs = [
-            lambda x: Writer(Sequence)(x, Cons("id", Nil())),
-            lambda x: Writer(Sequence)(x + 1, Cons("inc", Nil())),
+            lambda x: Writer(Sequence)(x, Sequence(("id",))),
+            lambda x: Writer(Sequence)(x + 1, Sequence(("inc",))),
         ]
 
         for x in [0, 1, 10]:
@@ -162,8 +162,8 @@ class TestWriterMonad(WriterTestCase):
                 self.assert_expr_equal(lhs, rhs)
 
     def test_monad_associativity(self):
-        f = lambda x: Writer(Sequence)(x + 1, Cons("f", Nil()))
-        g = lambda x: Writer(Sequence)(x * 2, Cons("g", Nil()))
+        f = lambda x: Writer(Sequence)(x + 1, Sequence(("f",)))
+        g = lambda x: Writer(Sequence)(x * 2, Sequence(("g",)))
 
         for value in fx_writer.values():
             with self.subTest(value=value):
@@ -184,7 +184,7 @@ class TestWriterMonad(WriterTestCase):
                     self.assert_expr_equal(lhs, rhs)
 
     def test_monad_rbind_definition(self):
-        f = lambda x: Writer(Sequence)(x + 1, Cons("rbind", Nil()))
+        f = lambda x: Writer(Sequence)(x + 1, Sequence(("rbind",)))
 
         for value in fx_writer.values():
             with self.subTest(value=value):
@@ -192,8 +192,8 @@ class TestWriterMonad(WriterTestCase):
                 self.assert_expr_equal(lhs, rhs)
 
     def test_monad_kleisli_definition(self):
-        f = lambda x: Writer(Sequence)(x + 1, Cons("f", Nil()))
-        g = lambda x: Writer(Sequence)(x * 2, Cons("g", Nil()))
+        f = lambda x: Writer(Sequence)(x + 1, Sequence(("f",)))
+        g = lambda x: Writer(Sequence)(x * 2, Sequence(("g",)))
 
         for x in [0, 1, 10]:
             with self.subTest(x=x):
@@ -201,8 +201,8 @@ class TestWriterMonad(WriterTestCase):
                 self.assert_expr_equal(lhs, rhs)
 
     def test_monad_rkleisli_definition(self):
-        f = lambda x: Writer(Sequence)(x + 1, Cons("f", Nil()))
-        g = lambda x: Writer(Sequence)(x * 2, Cons("g", Nil()))
+        f = lambda x: Writer(Sequence)(x + 1, Sequence(("f",)))
+        g = lambda x: Writer(Sequence)(x * 2, Sequence(("g",)))
 
         for x in [0, 1, 10]:
             with self.subTest(x=x):

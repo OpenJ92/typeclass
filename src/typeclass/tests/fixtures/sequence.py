@@ -1,16 +1,16 @@
-from typeclass.data.sequence import Nil, Cons
+from typeclass.data.sequence import Sequence
 
 
 def empty():
-    return Nil()
+    return Sequence(())
 
 
 def singleton():
-    return Cons(10, Nil())
+    return Sequence((10,))
 
 
 def small():
-    return Cons(1, Cons(2, Cons(3, Nil())))
+    return Sequence((1, 2, 3))
 
 
 def values():
@@ -35,21 +35,21 @@ def pure_values():
 
 def function_values():
     return [
-        Cons(lambda x: x + 1, Nil()),
-        Cons(lambda x: x * 2, Nil()),
-        Nil(),
+        Sequence((lambda x: x + 1,)),
+        Sequence((lambda x: x * 2,)),
+        Sequence(()),
     ]
 
 
 def composition_function_values():
     return [
-        Cons(lambda x: x + 1, Nil()),
-        Cons(lambda x: x * 2, Nil()),
-        Nil(),
+        Sequence((lambda x: x + 1,)),
+        Sequence((lambda x: x * 2,)),
+        Sequence(()),
     ], [
-        Cons(lambda x: x - 3, Nil()),
-        Cons(lambda x: x * x, Nil()),
-        Nil(),
+        Sequence((lambda x: x - 3,)),
+        Sequence((lambda x: x * x,)),
+        Sequence(()),
     ]
 
 
@@ -63,19 +63,20 @@ def binary_functions():
 
 def monad_functions():
     return [
-        lambda x: Cons(x, Nil()),
-        lambda x: Cons(x, Cons(x + 1, Nil())),
-        lambda x: Nil() if x == 0 else Cons(x - 1, Nil()),
+        lambda x: Sequence((x,)),
+        lambda x: Sequence((x, x + 1)),
+        lambda x: Sequence(()) if x == 0 else Sequence((x - 1,)),
     ]
 
 
 def join_values():
     return [
-        Nil(),
-        Cons(Nil(), Nil()),
-        Cons(Cons(1, Nil()), Nil()),
-        Cons(Cons(1, Cons(2, Nil())), Cons(Cons(3, Nil()), Nil())),
+        Sequence(()),
+        Sequence((Sequence(()),)),
+        Sequence((Sequence((1,)),)),
+        Sequence((Sequence((1, 2)), Sequence((3,)))),
     ]
+
 
 def triples():
     xs = values()

@@ -1,25 +1,32 @@
-from typeclass.data.sequence import Nil, Cons
+from typeclass.data.sequence import Sequence
 from typeclass.data.tree import Tree
 
 
 def leaf():
-    return Tree(1, Nil())
+    return Tree(1, Sequence(()))
 
 
 def shallow():
     return Tree(
         1,
-        Cons(Tree(2, Nil()), Cons(Tree(3, Nil()), Nil())),
+        Sequence((
+            Tree(2, Sequence(())),
+            Tree(3, Sequence(())),
+        )),
     )
 
 
 def deep():
     return Tree(
         10,
-        Cons(
-            Tree(20, Cons(Tree(30, Nil()), Nil())),
-            Nil(),
-        ),
+        Sequence((
+            Tree(
+                20,
+                Sequence((
+                    Tree(30, Sequence(())),
+                )),
+            ),
+        )),
     )
 
 
@@ -37,10 +44,12 @@ def pure_values():
 
 def function_values():
     return [
-        Tree(lambda x: x + 1, Nil()),
+        Tree(lambda x: x + 1, Sequence(())),
         Tree(
             lambda x: x * 2,
-            Cons(Tree(lambda x: x - 1, Nil()), Nil()),
+            Sequence((
+                Tree(lambda x: x - 1, Sequence(())),
+            )),
         ),
     ]
 
@@ -48,17 +57,21 @@ def function_values():
 def composition_function_values():
     return (
         [
-            Tree(lambda x: x + 1, Nil()),
+            Tree(lambda x: x + 1, Sequence(())),
             Tree(
                 lambda x: x * 2,
-                Cons(Tree(lambda x: x - 1, Nil()), Nil()),
+                Sequence((
+                    Tree(lambda x: x - 1, Sequence(())),
+                )),
             ),
         ],
         [
-            Tree(lambda x: x - 3, Nil()),
+            Tree(lambda x: x - 3, Sequence(())),
             Tree(
                 lambda x: x * x,
-                Cons(Tree(lambda x: x + 4, Nil()), Nil()),
+                Sequence((
+                    Tree(lambda x: x + 4, Sequence(())),
+                )),
             ),
         ],
     )
@@ -74,36 +87,49 @@ def binary_functions():
 
 def monad_functions():
     return [
-        lambda x: Tree(x, Nil()),
-        lambda x: Tree(x + 1, Cons(Tree(x * 2, Nil()), Nil())),
+        lambda x: Tree(x, Sequence(())),
+        lambda x: Tree(
+            x + 1,
+            Sequence((
+                Tree(x * 2, Sequence(())),
+            )),
+        ),
         lambda x: Tree(
             x - 1,
-            Cons(Tree(x + 10, Nil()), Cons(Tree(x + 20, Nil()), Nil())),
+            Sequence((
+                Tree(x + 10, Sequence(())),
+                Tree(x + 20, Sequence(())),
+            )),
         ),
     ]
 
 
 def join_values():
     return [
-        Tree(Tree(1, Nil()), Nil()),
+        Tree(Tree(1, Sequence(())), Sequence(())),
         Tree(
-            Tree(1, Cons(Tree(2, Nil()), Nil())),
-            Cons(
-                Tree(Tree(3, Nil()), Nil()),
-                Nil(),
+            Tree(
+                1,
+                Sequence((
+                    Tree(2, Sequence(())),
+                )),
             ),
+            Sequence((
+                Tree(Tree(3, Sequence(())), Sequence(())),
+            )),
         ),
         Tree(
             Tree(
                 10,
-                Cons(Tree(20, Nil()), Nil()),
+                Sequence((
+                    Tree(20, Sequence(())),
+                )),
             ),
-            Cons(
+            Sequence((
                 Tree(
-                    Tree(30, Nil()),
-                    Nil(),
+                    Tree(30, Sequence(())),
+                    Sequence(()),
                 ),
-                Nil(),
-            ),
+            )),
         ),
     ]
