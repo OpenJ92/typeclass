@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Generic, TypeVar, Callable
 
 from typeclass.data.thunk import Thunk
-from typeclass.data.sequence import Sequence, Cons, Nil, concat
+from typeclass.data.sequence import Sequence, concat
 from typeclass.typeclasses.functor import Functor
 from typeclass.typeclasses.applicative import Applicative
 from typeclass.typeclasses.show import Show
@@ -30,7 +30,7 @@ class Tree(Applicative[A], Functor[A], Show, Eq, Generic[A]):
 
     @classmethod
     def pure(cls, value: A) -> "Tree[A]":
-        return Tree(value, Nil())
+        return Tree(value, Sequence(()))
 
     def ap(self: "Tree[Callable[[A], B]]", fa: Force["Tree[A]"]) -> "Tree[B]":
         xs = fa.force()

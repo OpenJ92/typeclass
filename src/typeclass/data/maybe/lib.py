@@ -1,7 +1,7 @@
 from typing import Callable, TypeVar
 
 from typeclass.data.maybe.core import Maybe, Just, Nothing
-from typeclass.data.sequence import Sequence, Cons, Nil, reverse
+from typeclass.data.sequence import Sequence
 from typeclass.typeclasses.symbols import fmap
 from typeclass.runtime.core import evaluated
 
@@ -93,16 +93,7 @@ def _cat_maybes(values: Sequence[Maybe[A]]) -> Sequence[A]:
     Returns:
         A list containing the values from every Just in order.
     """
-    cur = values
-    out: Sequence[A] = Nil()
-
-    while isinstance(cur, Cons):
-        match cur.head:
-            case Just(value=value):
-                out = Cons(value, out)
-        cur = cur.tail
-
-    return reverse(out)
+    return Sequence((value for value in values if isinstance(value, Just)))
 cat_maybes = evaluated(_cat_maybes)
 
 

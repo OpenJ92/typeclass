@@ -1,12 +1,12 @@
 from typeclass.data.writer import Writer
-from typeclass.data.sequence import Sequence, Cons, Nil, from_iterable
+from typeclass.data.sequence import Sequence
 
 
 def values():
     return [
-        Writer(Sequence)(10, Nil()),
-        Writer(Sequence)(20, Cons("log", Nil())),
-        Writer(Sequence)(0, from_iterable("abc")),
+        Writer(Sequence)(10, Sequence(())),
+        Writer(Sequence)(20, Sequence(("log",))),
+        Writer(Sequence)(0, Sequence(tuple("abc"))),
     ]
 
 
@@ -24,42 +24,43 @@ def replacement():
 
 def function_values():
     return [
-        Writer(Sequence)((lambda x: x + 1), Nil()),
-        Writer(Sequence)((lambda x: x * 2), Cons("f", Nil())),
+        Writer(Sequence)((lambda x: x + 1), Sequence(())),
+        Writer(Sequence)((lambda x: x * 2), Sequence(("f",))),
     ]
+
 
 def composition_function_values():
     return [
-        Writer(Sequence)(lambda x: x + 1, Nil()),
-        Writer(Sequence)(lambda x: x * 2, Cons("u", Nil())),
+        Writer(Sequence)(lambda x: x + 1, Sequence(())),
+        Writer(Sequence)(lambda x: x * 2, Sequence(("u",))),
     ], [
-        Writer(Sequence)(lambda x: x - 3, Nil()),
-        Writer(Sequence)(lambda x: x * x, Cons("v", Nil())),
+        Writer(Sequence)(lambda x: x - 3, Sequence(())),
+        Writer(Sequence)(lambda x: x * x, Sequence(("v",))),
     ]
 
 
 def monad_functions():
     return [
-        lambda x: Writer(Sequence)(x, Cons("id", Nil())),
-        lambda x: Writer(Sequence)(x + 1, Cons("inc", Nil()))
+        lambda x: Writer(Sequence)(x, Sequence(("id",))),
+        lambda x: Writer(Sequence)(x + 1, Sequence(("inc",)))
             if isinstance(x, int)
-            else Writer(Sequence)(f"{x}!", Cons("bang", Nil())),
-        lambda x: Writer(Sequence)(f"[{x}]", Cons("wrap", Nil())),
+            else Writer(Sequence)(f"{x}!", Sequence(("bang",))),
+        lambda x: Writer(Sequence)(f"[{x}]", Sequence(("wrap",))),
     ]
 
 
 def join_values():
     return [
         Writer(Sequence)(
-            Writer(Sequence)("x", Nil()),
-            Nil(),
+            Writer(Sequence)("x", Sequence(())),
+            Sequence(()),
         ),
         Writer(Sequence)(
-            Writer(Sequence)(10, Cons("inner", Nil())),
-            Cons("outer", Nil()),
+            Writer(Sequence)(10, Sequence(("inner",))),
+            Sequence(("outer",)),
         ),
         Writer(Sequence)(
-            Writer(Sequence)(0, from_iterable("abc")),
-            Cons("top", Nil()),
+            Writer(Sequence)(0, Sequence(tuple("abc"))),
+            Sequence(("top",)),
         ),
     ]

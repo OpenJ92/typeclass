@@ -2,7 +2,7 @@ from typing import Callable, TypeVar
 
 from typeclass.data.thunk import Thunk
 from typeclass.data.stream.core import Stream
-from typeclass.data.sequence import Sequence, Cons, Nil
+from typeclass.data.sequence import Sequence
 
 from typeclass.typeclasses.symbols import pure, ap, duplicate
 
@@ -148,11 +148,14 @@ def _take(count: int, stream: Stream[A]) -> Sequence[A]:
     if count < 0:
         raise ValueError("take expects a non-negative count")
 
-    if count == 0:
-        return Nil()
+    out: list[A] = []
+    cur = stream
 
-    return Cons(stream.head, _take(count - 1, stream.tail.force()))
+    for _ in range(count):
+        out.append(cur.head)
+        cur = cur.tail.force()
 
+    return Sequence(tuple(out))
 
 def _prepend(value: A, stream: Stream[A]) -> Stream[A]:
     """
@@ -267,11 +270,10 @@ def _cycle_sequence(xs: Sequence[A]) -> Stream[A]:
     Raises:
         ValueError: If `xs` is empty.
     """
-    match xs:
-        case Nil():
-            raise ValueError("cannot cycle an empty Sequence into a Stream")
-        case _:
-            return __cycle_from_root(xs, xs)
+    if not xs._values:
+        raise ValueError("cannot cycle an empty Sequence into a Stream")
+
+    return __cycle_from_root(xs._values, 0)
 
 
 def __cycle_from_root(root: Sequence[A], current: Sequence[A]) -> Stream[A]:
@@ -286,12 +288,10 @@ def __cycle_from_root(root: Sequence[A], current: Sequence[A]) -> Stream[A]:
         A Stream that traverses `current`, restarting from `root`
         whenever the end is reached.
     """
-    match current:
-        case Cons(head=h, tail=t):
-            return Stream(h, Thunk(lambda: __cycle_from_root(root, t)))
-        case Nil():
-            return __cycle_from_root(root, root)
+    value = values[index]
+    next_index = (index + 1) % len(values)
 
+    return Stream(value, Thunk(lambda: __cycle_from_root(values, next_index)))
 
 def _repeat_last(xs: Sequence[A]) -> Stream[A]:
     """
@@ -307,14 +307,19 @@ def _repeat_last(xs: Sequence[A]) -> Stream[A]:
     Raises:
         ValueError: If `xs` is empty.
     """
-    match xs:
-        case Nil():
-            raise ValueError("cannot extend an empty Sequence into a Stream")
-        case Cons(head=h, tail=Nil()):
-            return Stream(h, Thunk(lambda: repeat(h)))
-        case Cons(head=h, tail=t):
-            return Stream(h, Thunk(lambda: _repeat_last(t)))
+    if not xs._values:
+        raise ValueError("cannot extend an empty Sequence into a Stream")
 
+    values = xs._values
+
+    def build(index: int) -> Stream[A]:
+        if index < len(values) - 1:
+            return Stream(values[index], Thunk(lambda: build(index + 1)))
+        else:
+            last = values[-1]
+            return Stream(last, Thunk(lambda: _repeat(last)))
+
+    return build(0)
 
 def _prefix(stream: Stream[A], count: int) -> Sequence[A]:
     """
