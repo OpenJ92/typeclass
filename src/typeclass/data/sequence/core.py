@@ -1,6 +1,4 @@
-from __future__ import annotations
-from typing import Generic, TypeVar, Callable, Iterable, Iterator
-
+from typing import Generic, TypeVar, Callable, Iterator
 from dataclasses import dataclass
 
 from typeclass.data.thunk import Thunk
@@ -16,113 +14,97 @@ from typeclass.typeclasses.force import Force
 A = TypeVar("A")
 B = TypeVar("B")
 
-@dataclass(frozen=True)
-class Sequence(Monoid, Semigroup, Monad[A], Alternative, Applicative[A], Functor[A], Show, Generic[A]):
+
+@dataclass(
+    frozen=True,
+    eq=False,
+    repr=False,
+    order=False,
+    unsafe_hash=False,
+)
+class Sequence(
+    Monoid,
+    Semigroup,
+    Monad[A],
+    Alternative,
+    Applicative[A],
+    Functor[A],
+    Show,
+    Generic[A],
+):
+    _values: tuple[A, ...]
 
     # ----- Functor ---------------------------------------------------------
 
-    def fmap(self: Sequence[A], f: Force[Callable[[A], B]]) -> Sequence[B]:
+    def fmap(self: "Sequence[A]", f: Force[Callable[[A], B]]) -> "Sequence[B]":
         _f = f.force()
-        match self:
-            case Cons(head=h, tail=t):
-                return Cons(_f(h), t.fmap(f))
-            case Nil():
-                return Nil()
+        return Sequence(tuple(_f(x) for x in self._values))
 
     # ----- Applicative -----------------------------------------------------
 
     @classmethod
-    def pure(cls: type, value: A) -> Sequence[A]:
-        return Cons(value, Nil())
+    def pure(cls: type, value: A) -> "Sequence[A]":
+        return Sequence((value,))
 
-    def ap(self: Sequence[Callable[[A], B]], fa: Force[Sequence[A]]) -> Sequence[B]:
+    def ap(self: "Sequence[Callable[[A], B]]", fa: Force["Sequence[A]"]) -> "Sequence[B]":
         """
         Cartesian product applicative:
           [f1,f2] <*> [a,b] = [f1(a), f1(b), f2(a), f2(b)]
         """
-        fs = self
-        xs = fa.force()
+        xs = fa.force()._values
+        out: list[B] = []
 
-        match fs:
-            case Cons(head=f, tail=rest):
-                return concat(xs.fmap(Thunk(lambda: f)), rest.ap(fa))
-            case Nil():
-                return Nil()
+        for f in self._values:
+            for x in xs:
+                out.append(f(x))
+
+        return Sequence(tuple(out))
 
     # ----- Alternative -----------------------------------------------------
 
     @classmethod
-    def empty(cls: type) -> Sequence[A]:
-        return Nil()
+    def empty(cls: type) -> "Sequence[A]":
+        return Sequence(())
 
-    def otherwise(self: Sequence[A], other: Force[Sequence[A]]) -> Sequence[A]:
-        return concat(self, other.force())
+    def otherwise(self: "Sequence[A]", other: Force["Sequence[A]"]) -> "Sequence[A]":
+        return Sequence(self._values + other.force()._values)
 
     # ----- Monad -----------------------------------------------------------
 
-    def bind(self: Sequence[A], mf: Force[Callable[[A], Sequence[B]]]) -> Sequence[B]:
+    def bind(self: "Sequence[A]", mf: Force[Callable[[A], "Sequence[B]"]]) -> "Sequence[B]":
+        """
+        Stack-safe flatMap, preserves order.
+        """
         mf_ = mf.force()
+        out: list[B] = []
 
-        match self:
-            case Cons(head=h, tail=t):
-                return concat(mf_(h), t.bind(mf))
-            case Nil():
-                return Nil()
+        for x in self._values:
+            out.extend(mf_(x)._values)
 
-    # ----- Semigroup -----------------------------------------------------
+        return Sequence(tuple(out))
 
-    def combine(self: Sequence[A], other: Force[Sequence[B]]):
-        return concat(self, other.force())
+    # ----- Semigroup -------------------------------------------------------
 
-    # ----- Monoid --------------------------------------------------------
+    def combine(self: "Sequence[A]", other: Force["Sequence[A]"]) -> "Sequence[A]":
+        return Sequence(self._values + other.force()._values)
+
+    # ----- Monoid ----------------------------------------------------------
 
     @classmethod
     def mempty(cls):
-        return Nil()
+        return Sequence(())
 
-    # ----- Show ----------------------------------------------------------
+    # ----- Show ------------------------------------------------------------
 
     def __repr__(self) -> str:
-        return f"Sequence({list(iter(self))!r})"
+        return f"Sequence({list(self._values)!r})"
 
-    # ----- Eq ------------------------------------------------------------
+    # ----- Eq --------------------------------------------------------------
 
-    def __eq__(self: Sequence[A], other: Sequence[A]) -> bool:
-        match (self, other):
-            case (Cons(head=x, tail=xs), Cons(head=y, tail=ys)):
-                return  x == y and xs == ys
-            case (Nil(), Nil()):
-                return True
-            case _:
-                return False
-        return True
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Sequence) and self._values == other._values
 
     # ----- Convenience -----------------------------------------------------
 
     def __iter__(self) -> Iterator[A]:
-        cur: Sequence[A] = self
-        while True:
-            match cur:
-                case Cons(head=h, tail=t):
-                    yield h
-                    cur = t
-                case Nil():
-                    return
-
-
-@dataclass(frozen=True)
-class Cons(Sequence[A]): 
-    head: A
-    tail: Sequence[A]
-
-
-@dataclass(frozen=True)
-class Nil(Sequence[A]):
-    pass
-
-def concat(xs: Sequence[A], ys: Sequence[A]) -> Sequence[A]:
-    match xs:
-        case Cons(head=head, tail=tail):
-            return Cons(head, concat(tail,ys))
-        case Nil():
-            return ys
+        return iter(self._values)

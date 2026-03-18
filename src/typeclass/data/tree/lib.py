@@ -1,5 +1,3 @@
-from typeclass.data.sequence import Nil
-
 from typing import TypeVar
 
 A = TypeVar("A")
@@ -18,6 +16,6 @@ def size(tree: Tree[A]) -> int:
     return 1 + sum(size(child) for child in tree.children)
 
 def depth(tree: Tree[A]) -> int:
-    if tree.children == Nil():
+    if not tree.children:
         return 1
     return 1 + max(depth(child) for child in tree.children)
