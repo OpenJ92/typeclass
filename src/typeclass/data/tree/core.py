@@ -5,6 +5,7 @@ from typeclass.data.thunk import Thunk
 from typeclass.data.sequence import Sequence, concat
 from typeclass.typeclasses.functor import Functor
 from typeclass.typeclasses.applicative import Applicative
+from typeclass.typeclasses.monad import Monad
 from typeclass.typeclasses.show import Show
 from typeclass.typeclasses.eq import Eq
 from typeclass.typeclasses.force import Force
@@ -13,7 +14,7 @@ A = TypeVar("A")
 B = TypeVar("B")
 
 @dataclass(frozen=True)
-class Tree(Applicative[A], Functor[A], Show, Eq, Generic[A]):
+class Tree(Monad[A], Applicative[A], Functor[A], Show, Eq, Generic[A]):
     value: A
     children: Sequence[Tree[A]]
 
@@ -29,10 +30,10 @@ class Tree(Applicative[A], Functor[A], Show, Eq, Generic[A]):
     # ----- Applicative -----------------------------------------------------
 
     @classmethod
-    def pure(cls, value: A) -> "Tree[A]":
+    def pure(cls, value: A) -> Tree[A]:
         return Tree(value, Sequence(()))
 
-    def ap(self: "Tree[Callable[[A], B]]", fa: Force["Tree[A]"]) -> "Tree[B]":
+    def ap(self: Tree[Callable[[A], B]], fa: Force[Tree[A]]) -> Tree[B]:
         xs = fa.force()
 
         return self.bind(
@@ -46,7 +47,7 @@ class Tree(Applicative[A], Functor[A], Show, Eq, Generic[A]):
 
     # ----- Monad ------------------------------------------------------------
 
-    def bind(self: "Tree[A]", f: Force[Callable[[A], "Tree[B]"]]) -> "Tree[B]":
+    def bind(self: Tree[A], f: Force[Callable[[A], Tree[B]]]) -> Tree[B]:
         nf = f.force()
 
         match self:
