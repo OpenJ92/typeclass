@@ -3,6 +3,7 @@ from typing import Callable, Generic, TypeVar
 
 from typeclass.data.stream import Stream
 from typeclass.data.stream.lib import _zipwith
+
 from typeclass.data.thunk import Thunk, delay, suspend
 from typeclass.typeclasses.functor import Functor
 from typeclass.typeclasses.applicative import Applicative
@@ -32,11 +33,13 @@ class StreamTree(
 
     def fmap(self, f: Force[Callable[[A], B]]) -> StreamTree[B]:
         nf = f.force()
+        children = self.children.force()
+
         return StreamTree(
             nf(self.value),
-            Thunk(lambda: self.children.force().fmap(Thunk(lambda: lambda child: child.fmap(f)))
-            ),
+            Thunk(lambda: children.fmap(delay(lambda child: child.fmap(f))))
         )
+        
 
     # ----- Applicative -----------------------------------------------------
 
@@ -60,15 +63,17 @@ class StreamTree(
         return self.value
 
     def duplicate(self) -> StreamTree[StreamTree[A]]:
+        children = self.children.force()
+
         return StreamTree(
             self,
-            Thunk(lambda: self.children.force().fmap(Thunk(lambda: lambda child: child.duplicate()))),
+            Thunk(lambda: children.fmap(delay(lambda child: child.duplicate()))),
         )
 
     # ----- Show ------------------------------------------------------------
 
     def __repr__(self) -> str:
-        return f"StreamTree({self.value!r}, Stream(<children>))"
+        return f"StreamTree(value={self.value!r}, children=<{self.children}>)"
 
     # ----- Eq --------------------------------------------------------------
 
@@ -80,11 +85,12 @@ class StreamTree(
     # ----- Convenience -----------------------------------------------------
 
 def _eq_streamtree(
-    left: StreamTree[A],
+    left:  StreamTree[A],
     right: StreamTree[A],
     depth: int,
     breadth: int,
 ) -> bool:
+
     if left.value != right.value:
         return False
 
