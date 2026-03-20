@@ -35,27 +35,25 @@ class StreamTree(
         nf = f.force()
         children = self.children.force()
 
-        return StreamTree(
-            nf(self.value),
-            Thunk(lambda: children.fmap(delay(lambda child: child.fmap(f))))
-        )
+        value = nf(self.value)
+        nchildren = Thunk(lambda: children.fmap(delay(lambda child: child.fmap(f))))
+
+        return StreamTree(value, nchildren)
         
 
     # ----- Applicative -----------------------------------------------------
 
     @classmethod
     def pure(cls, value: A) -> StreamTree[A]:
-        return StreamTree(
-            value,
-            Thunk(lambda: Stream.pure(cls.pure(value))),
-        )
+        nchildren = Thunk(lambda: Stream.pure(cls.pure(value)))
+        return StreamTree(value, nchildren)
 
     def ap(self: StreamTree[Callable[[A], B]], fa: Force[StreamTree[A]]) -> StreamTree[B]:
         other = fa.force()
-        return StreamTree(
-            self.value(other.value),
-            suspend(_zipwith, lambda x, y: x.ap(delay(y)), self.children, other.children)
-        )
+        value = self.value(other.value)
+        nchildren = suspend(_zipwith, lambda x, y: x.ap(delay(y)), self.children, other.children)
+
+        return StreamTree(value, nchildren)
 
     # ----- Comonad ---------------------------------------------------------
 
@@ -64,11 +62,9 @@ class StreamTree(
 
     def duplicate(self) -> StreamTree[StreamTree[A]]:
         children = self.children.force()
+        nchildren = Thunk(lambda: children.fmap(delay(lambda child: child.duplicate())))
 
-        return StreamTree(
-            self,
-            Thunk(lambda: children.fmap(delay(lambda child: child.duplicate()))),
-        )
+        return StreamTree(self, nchildren)
 
     # ----- Show ------------------------------------------------------------
 
