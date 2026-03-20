@@ -13,10 +13,7 @@ class Thunk(Force[T], Generic[T]):
 
     def force(self) -> T:
         if not self._evaluated:
-            value = self._thunk()
-            while isinstance(value, Thunk):
-                value = value.force()
-            self._value = value
+            self._value = self._thunk()
             self._evaluated = True
         return self._value
 

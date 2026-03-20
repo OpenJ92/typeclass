@@ -3,7 +3,7 @@ from typing import Callable, Generic, TypeVar
 
 from typeclass.data.stream import Stream
 from typeclass.data.stream.lib import _zipwith
-from typeclass.data.thunk import Thunk
+from typeclass.data.thunk import Thunk, delay, suspend, resume
 from typeclass.typeclasses.functor import Functor
 from typeclass.typeclasses.applicative import Applicative
 from typeclass.typeclasses.comonad import Comonad
@@ -25,18 +25,20 @@ class StreamTree(
     value: A
     children: Force[Stream[StreamTree[A]]]
 
-    EQ_DEPTH = 4
-    EQ_BREADTH = 4
+    EQ_DEPTH = 2
+    EQ_BREADTH = 2
 
     # ----- Functor ---------------------------------------------------------
 
     def fmap(self, f: Force[Callable[[A], B]]) -> StreamTree[B]:
         nf = f.force()
+        children = self.children.force()
+
         return StreamTree(
             nf(self.value),
-            Thunk(lambda: self.children.force().fmap(Thunk(lambda: lambda child: child.fmap(f)))
-            ),
+            Thunk(lambda: children.fmap(delay(lambda child: child.fmap(f))))
         )
+        
 
     # ----- Applicative -----------------------------------------------------
 
@@ -51,7 +53,7 @@ class StreamTree(
         other = fa.force()
         return StreamTree(
             self.value(other.value),
-            Thunk(lambda: _zipwith(lambda x, y: x.ap(y), self.children.force(), other.children.force()))
+            suspend(_zipwith, lambda x, y: x.ap(delay(y)), self.children, other.children)
         )
 
     # ----- Comonad ---------------------------------------------------------
@@ -60,15 +62,17 @@ class StreamTree(
         return self.value
 
     def duplicate(self) -> StreamTree[StreamTree[A]]:
+        children = self.children.force()
+
         return StreamTree(
             self,
-            Thunk(lambda: self.children.fmap(Thunk(lambda: lambda child: child.duplicate()))),
+            Thunk(lambda: children.fmap(delay(lambda child: child.duplicate()))),
         )
 
     # ----- Show ------------------------------------------------------------
 
     def __repr__(self) -> str:
-        return f"StreamTree({self.value!r}, Stream(<children>))"
+        return f"StreamTree(value={self.value!r}, children=<{self.children}>)"
 
     # ----- Eq --------------------------------------------------------------
 
@@ -80,11 +84,12 @@ class StreamTree(
     # ----- Convenience -----------------------------------------------------
 
 def _eq_streamtree(
-    left: StreamTree[A],
+    left:  StreamTree[A],
     right: StreamTree[A],
     depth: int,
     breadth: int,
 ) -> bool:
+
     if left.value != right.value:
         return False
 

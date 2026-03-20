@@ -23,7 +23,7 @@ class Stream(Applicative[A], Comonad[A], Functor[A], Eq, Show, Generic[A]):
         nf = f.force()
         return Stream(
             nf(self.head),
-            Thunk(lambda: self.tail.force().fmap(Thunk(lambda: nf))),
+            Thunk(lambda: self.tail.force().fmap(f)),
         )
 
     # ----- Applicative -----------------------------------------------------
