@@ -171,7 +171,7 @@ def _prepend(value: A, stream: Stream[A]) -> Stream[A]:
     return Stream(value, Thunk(lambda: stream))
 
 
-def _zipwith(function: Callable[[A, B], C], xs: Stream[A], ys: Stream[B]) -> Stream[C]:
+def _zipwith(function: Callable[[A, B], C], xs: Force[Stream[A]], ys: Force[Stream[B]]) -> Stream[C]:
     """
     Combine two Streams elementwise using a binary function.
 
@@ -185,7 +185,8 @@ def _zipwith(function: Callable[[A, B], C], xs: Stream[A], ys: Stream[B]) -> Str
         A Stream whose elements are produced by applying `function`
         to corresponding elements of `xs` and `ys`.
     """
-    return Stream |pure| function |ap| xs |ap| ys
+    x, y = xs.force().head, ys.force().head
+    return Stream(function(x, y), Thunk(lambda: _zipwith(function, xs.force().tail, ys.force().tail)))
 
 
 def _zip_stream(xs: Stream[A], ys: Stream[B]) -> Stream[tuple[A, B]]:
