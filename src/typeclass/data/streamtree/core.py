@@ -3,7 +3,8 @@ from typing import Callable, Generic, TypeVar
 
 from typeclass.data.stream import Stream
 from typeclass.data.stream.lib import _zipwith
-from typeclass.data.thunk import Thunk, delay, suspend, resume
+
+from typeclass.data.thunk import Thunk, delay, suspend
 from typeclass.typeclasses.functor import Functor
 from typeclass.typeclasses.applicative import Applicative
 from typeclass.typeclasses.comonad import Comonad

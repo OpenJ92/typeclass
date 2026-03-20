@@ -5,6 +5,7 @@ from typeclass.data.streamtree import StreamTree
 from typeclass.data.stream import Stream
 from typeclass.data.thunk import Thunk, suspend, delay, resume
 
+
 from typeclass.interpret.run import evaluate
 
 from typeclass.typeclasses.symbols import pure, ap
@@ -39,6 +40,7 @@ def depths(depth: int = 0) -> StreamTree[int]:
         depth,
         Thunk(lambda: Stream.pure(depths(depth + 1))),
     )
+  
 def widths(width: int = 0) -> StreamTree[int]:
     return StreamTree(width, suspend(_width_children))
 
