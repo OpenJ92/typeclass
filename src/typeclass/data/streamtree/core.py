@@ -3,7 +3,7 @@ from typing import Callable, Generic, TypeVar
 
 from typeclass.data.stream import Stream
 from typeclass.data.stream.lib import _zipwith
-from typeclass.data.thunk import Thunk
+from typeclass.data.thunk import Thunk, delay, suspend
 from typeclass.typeclasses.functor import Functor
 from typeclass.typeclasses.applicative import Applicative
 from typeclass.typeclasses.comonad import Comonad
@@ -25,8 +25,8 @@ class StreamTree(
     value: A
     children: Force[Stream[StreamTree[A]]]
 
-    EQ_DEPTH = 4
-    EQ_BREADTH = 4
+    EQ_DEPTH = 2
+    EQ_BREADTH = 2
 
     # ----- Functor ---------------------------------------------------------
 
@@ -51,7 +51,7 @@ class StreamTree(
         other = fa.force()
         return StreamTree(
             self.value(other.value),
-            Thunk(lambda: _zipwith(lambda x, y: x.ap(y), self.children.force(), other.children.force()))
+            suspend(_zipwith, lambda x, y: x.ap(delay(y)), self.children, other.children)
         )
 
     # ----- Comonad ---------------------------------------------------------
@@ -62,7 +62,7 @@ class StreamTree(
     def duplicate(self) -> StreamTree[StreamTree[A]]:
         return StreamTree(
             self,
-            Thunk(lambda: self.children.fmap(Thunk(lambda: lambda child: child.duplicate()))),
+            Thunk(lambda: self.children.force().fmap(Thunk(lambda: lambda child: child.duplicate()))),
         )
 
     # ----- Show ------------------------------------------------------------
