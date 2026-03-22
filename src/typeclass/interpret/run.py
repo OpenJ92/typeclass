@@ -103,13 +103,12 @@ def run(free, cofree, env):
             return suspend(alter.otherwise, native)
         
         case Many(cls, value):
-            lowered = Otherwise(delay(Some(cls, value)), delay(Pure(cls, delay([]))))
-            return resume(run, lowered, cofree, env)
+            value = run(value.force(), None, None)
+            return suspend(cls.many, value)
 
         case Some(cls, value):
-            cons = delay(lambda x: (lambda xs: [x] + xs))
-            lowered = Ap(delay(Map(cons, value)), delay(Many(cls, value)))
-            return resume(run, lowered, cofree, env)
+            value = run(value.force(), None, None)
+            return suspend(cls.some, value)
 
         # ----- Monad -----------------------------------------------------------
         # Implements empty, otherwise, and the derived combinators some/many.
