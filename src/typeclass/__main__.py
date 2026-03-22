@@ -11,6 +11,7 @@ if __name__ == "__main__":
     from typeclass.data.sequence import Sequence, concat, from_iterable, zipwith
     from typeclass.data.tree import Tree, pretty, embed
     from typeclass.data.streamtree import StreamTree, realize, depths, widths, paths, coordinates
+    from typeclass.data.machineparser import MachineParser, satisfy, token
     from typeclass.typeclasses.applicative import pure, liftA2
     from typeclass.typeclasses.symbols import fmap, pure, ap, then, skip, empty, otherwise, some, many, return_, bind, \
     compose, rcompose, identity, invert, combine, mempty, inverse, arrow, first, second, split, fanout, \
