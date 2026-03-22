@@ -1,4 +1,5 @@
 from typing import Generic, TypeVar, Callable, Iterable
+from collections import deque
 
 from typeclass.typeclasses.functor import Functor
 from typeclass.typeclasses.applicative import Applicative
@@ -59,34 +60,29 @@ class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
 
     @classmethod
     def _repeat_maximal(cls, parser: Parser[A], input: str) -> list[tuple[list[A], str]]:
-        out: list[tuple[list[A], str]] = []
-        stack: list[tuple[list[A], str]] = []
+        out: deque[tuple[list[A], str]] = deque()
+        stack: deque[tuple[list[A], str]] = deque()
     
-        seeds: list[tuple[list[A], str]] = []
         for (a, rest) in parser.force().run(input):
             if rest == input:
                 continue
-            seeds.append(([a], rest))
-    
-        for item in reversed(seeds):
-            stack.append(item)
+            stack.append(([a], rest))
     
         while stack:
-            xs, current = stack.pop()
+            xs, current = stack.popleft()
     
-            nexts: list[tuple[list[A], str]] = []
+            nexts: deque[tuple[list[A], str]] = deque()
             for (a, rest) in parser.force().run(current):
                 if rest == current:
                     continue
-                nexts.append((xs + [a], rest))
+                nexts.appendleft((xs + [a], rest))
     
             if nexts:
-                for item in reversed(nexts):
-                    stack.append(item)
+                stack.extendleft(nexts)
             else:
                 out.append((xs, current))
     
-        return out
+        return list(out)
 
     @classmethod
     def some(cls, parser: Parser[A]) -> Parser[list[A]]:
