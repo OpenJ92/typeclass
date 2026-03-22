@@ -58,7 +58,7 @@ class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
         return Parser(inner)
 
     @classmethod
-    def _repeat_maximal(cls, parser: "Parser[A]", input: str) -> list[tuple[list[A], str]]:
+    def _repeat_maximal(cls, parser: Parser[A], input: str) -> list[tuple[list[A], str]]:
         out: list[tuple[list[A], str]] = []
         stack: list[tuple[list[A], str]] = []
     
@@ -89,14 +89,14 @@ class Parser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
         return out
 
     @classmethod
-    def some(cls, parser: "Parser[A]") -> "Parser[list[A]]":
+    def some(cls, parser: Parser[A]) -> Parser[list[A]]:
         def inner(input: str) -> list[tuple[list[A], str]]:
             return cls._repeat_maximal(parser, input)
         return cls(inner)
     
     
     @classmethod
-    def many(cls, parser: "Parser[A]") -> "Parser[list[A]]":
+    def many(cls, parser: Parser[A]) -> Parser[list[A]]:
         def inner(input: str) -> list[tuple[list[A], str]]:
             out = cls._repeat_maximal(parser, input)
             if out:
