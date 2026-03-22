@@ -1,4 +1,5 @@
 from typing import Generic, TypeVar, Callable
+from collections import deque
 
 from typeclass.typeclasses.functor import Functor
 from typeclass.typeclasses.applicative import Applicative
@@ -60,38 +61,30 @@ class NDParser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
             return left + right
 
         return NDParser(inner)
-
+    
     @classmethod
     def _repeat_all(cls, parser: NDParser[A], input: str) -> list[tuple[list[A], str]]:
-        out: list[tuple[list[A], str]] = []
-        stack: list[tuple[list[A], str]] = []
-
-        seeds: list[tuple[list[A], str]] = []
+        out: deque[tuple[list[A], str]] = deque()
+        stack: deque[tuple[list[A], str]] = deque()
+    
         for (a, rest) in parser.force().run(input):
-            # guard against non-consuming success
             if rest == input:
                 continue
-            seeds.append(([a], rest))
-
-        for item in reversed(seeds):
-            stack.append(item)
-
+            stack.append(([a], rest))
+    
         while stack:
-            xs, current = stack.pop()
-
-            # keep every non-empty prefix
-            out.append((xs, current))
-
-            nexts: list[tuple[list[A], str]] = []
+            xs, current = stack.popleft()
+            out.appendleft((xs, current))
+    
+            nexts: deque[tuple[list[A], str]] = deque()
             for (a, rest) in parser.force().run(current):
                 if rest == current:
                     continue
-                nexts.append((xs + [a], rest))
-
-            for item in reversed(nexts):
-                stack.append(item)
-
-        return out
+                nexts.appendleft((xs + [a], rest))
+    
+            stack.extendleft(nexts)
+    
+        return list(out)
 
     @classmethod
     def some(cls, parser: NDParser[A]) -> NDParser[list[A]]:
@@ -104,7 +97,7 @@ class NDParser(Monad, Alternative, Applicative[A], Functor[A], Generic[A]):
     def many(cls, parser: NDParser[A]) -> NDParser[list[A]]:
         def inner(input: str) -> list[tuple[list[A], str]]:
             # fully nondeterministic many = pure([]) ∪ some(parser)
-            return [([], input)] + cls._repeat_all(parser, input)
+            return cls._repeat_all(parser, input) + [([], input)] 
 
         return cls(inner)
 
