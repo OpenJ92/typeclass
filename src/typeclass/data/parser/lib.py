@@ -3,9 +3,6 @@ from typeclass.data.maybe import Just, Nothing
 from typeclass.data.parser import Parser  # adjust import if needed
 
 
-# --- core primitives ----------------------------------------------------------
-
-
 def item():
     def run(s):
         if not s:
@@ -25,8 +22,8 @@ def satisfy(pred):
 def char(c):
     return satisfy(lambda x: x == c)
 
-
-# --- derived combinators ------------------------------------------------------
+def eof():
+    return Parser(lambda s: [(None, "")] if s == "" else [])
 
 def one_of(chars):
     return satisfy(lambda c: c in chars)
@@ -34,3 +31,18 @@ def one_of(chars):
 
 def none_of(chars):
     return satisfy(lambda c: c not in chars)
+
+
+def fix(f):
+    parser = None
+
+    def inner(s):
+        return parser.force().run(s)
+
+    parser = Parser(inner)
+    parser = f(parser)
+    return parser
+
+
+def delay(f):
+    return Parser(lambda s: f().force().run(s))
