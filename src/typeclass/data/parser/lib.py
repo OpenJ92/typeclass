@@ -6,16 +6,16 @@ from typeclass.data.parser import Parser  # adjust import if needed
 def item():
     def run(s):
         if not s:
-            return Sequence(())
-        return Sequence(((s[0], s[1:]),))
+            return []
+        return [(s[0], s[1:])]
     return Parser(run)
 
 
 def satisfy(pred):
     def run(s):
         if s and pred(s[0]):
-            return Sequence(((s[0], s[1:]),))
-        return Sequence(())
+            return [(s[0], s[1:])]
+        return []
     return Parser(run)
 
 
@@ -37,7 +37,7 @@ def fix(f):
     parser = None
 
     def inner(s):
-        return parser.force().run(s)
+        return parser.run(s)
 
     parser = Parser(inner)
     parser = f(parser)

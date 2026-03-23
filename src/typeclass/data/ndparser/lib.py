@@ -38,7 +38,7 @@ def fix(f):
     parser = None
 
     def inner(s):
-        return parser.force().run(s)
+        return parser.run(s)
 
     parser = NDParser(inner)
     parser = f(parser)
