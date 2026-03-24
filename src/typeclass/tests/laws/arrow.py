@@ -39,7 +39,7 @@ def arrow_first_identity_expr(witness: type[Arrow[A, B]]):
     Arrow law:
         first(id) == id
     """
-    lhs = witness |first| witness.id()
+    lhs = witness |first| identity(witness)
     rhs = identity(witness)
     return lhs, rhs
 
