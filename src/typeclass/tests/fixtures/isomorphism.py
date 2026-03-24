@@ -1,7 +1,5 @@
-# typeclass/tests/fixtures/morphism.py
-
-from typeclass.data.morphism import Morphism
 from typeclass.data.either import Left, Right
+from typeclass.data.isomorphism import Isomorphism
 
 
 def inputs():
@@ -32,10 +30,9 @@ def either_inputs():
 
 def values():
     return [
-        Morphism(lambda x: x),
-        Morphism(lambda x: x + 1),
-        Morphism(lambda x: x * 2),
-        Morphism(lambda x: -x),
+        Isomorphism(lambda x: x, lambda x: x),
+        Isomorphism(lambda x: x + 1, lambda x: x - 1),
+        Isomorphism(lambda x: -x, lambda x: -x),
     ]
 
 

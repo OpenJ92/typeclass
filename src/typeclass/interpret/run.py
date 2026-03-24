@@ -146,7 +146,10 @@ def run(free, cofree, env):
             fbc = run(fbc.force(), cofree, env).force()
             fab = run(fab.force(), cofree, env)
 
-            return suspend(fbc.compose, fab)
+            def k(a):
+                return run(fab.force()(a), cofree, env).force()
+
+            return suspend(fbc.compose, delay(k))
 
         # ----- Category ---------------------------------------------------------
         # Identity morphism.

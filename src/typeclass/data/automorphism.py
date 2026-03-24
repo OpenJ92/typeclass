@@ -4,12 +4,13 @@ from typing import Callable, Generic, TypeVar
 
 from typeclass.data.endomorphism import Endomorphism
 from typeclass.typeclasses.group import Group
+from typeclass.typeclasses.groupoid import Groupoid
 
 T = TypeVar("T")
 
 
 @dataclass(frozen=True)
-class Automorphism(Group, Endomorphism[T], Generic[T]):
+class Automorphism(Groupoid, Group, Endomorphism[T], Generic[T]):
     """
     Invertible endomorphism T <-> T.
     Group + Groupoid collapse here.
@@ -41,3 +42,6 @@ class Automorphism(Group, Endomorphism[T], Generic[T]):
 
     def inverse(self) -> Automorphism[T]:
         return Automorphism(self._inv, self._run)
+
+    def invert(self) -> Automorphism[T]:
+        return self.inverse()

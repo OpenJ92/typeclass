@@ -1,6 +1,4 @@
-# typeclass/tests/fixtures/morphism.py
-
-from typeclass.data.morphism import Morphism
+from typeclass.data.automorphism import Automorphism
 from typeclass.data.either import Left, Right
 
 
@@ -32,10 +30,11 @@ def either_inputs():
 
 def values():
     return [
-        Morphism(lambda x: x),
-        Morphism(lambda x: x + 1),
-        Morphism(lambda x: x * 2),
-        Morphism(lambda x: -x),
+        Automorphism(lambda x: x, lambda x: x),
+        Automorphism(lambda x: x + 1, lambda x: x - 1),
+        Automorphism(lambda x: x + 2, lambda x: x - 2),
+        Automorphism(lambda x: -x, lambda x: -x),
+        Automorphism(lambda x: x * 2, lambda x: x / 2),
     ]
 
 

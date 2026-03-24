@@ -1,6 +1,6 @@
-# typeclass/tests/fixtures/morphism.py
+# typeclass/tests/fixtures/endomorphism.py
 
-from typeclass.data.morphism import Morphism
+from typeclass.data.endomorphism import Endomorphism
 from typeclass.data.either import Left, Right
 
 
@@ -32,10 +32,10 @@ def either_inputs():
 
 def values():
     return [
-        Morphism(lambda x: x),
-        Morphism(lambda x: x + 1),
-        Morphism(lambda x: x * 2),
-        Morphism(lambda x: -x),
+        Endomorphism(lambda x: x),
+        Endomorphism(lambda x: x + 1),
+        Endomorphism(lambda x: x * 2),
+        Endomorphism(lambda x: -x),
     ]
 
 
