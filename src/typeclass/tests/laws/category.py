@@ -1,6 +1,6 @@
 from typing import TypeVar
 from typeclass.typeclasses.category import Category
-from typeclass.typeclasses.symbols import compose, rcompose, identity
+from typeclass.typeclasses.symbols import compose, rcompose, rcompose, identity
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -11,7 +11,7 @@ def category_left_identity_expr(cls: type, value: Category[A, B]):
     Left identity:
         id >>> f == f
     """
-    lhs = identity(cls) |compose| value
+    lhs = identity(cls) |rcompose| value
     rhs = value
     return lhs, rhs
 
@@ -21,7 +21,7 @@ def category_right_identity_expr(cls: type, value: Category[A, B]):
     Right identity:
         f >>> id == f
     """
-    lhs = value |compose| identity(cls)
+    lhs = value |rcompose| identity(cls)
     rhs = value
     return lhs, rhs
 
@@ -31,7 +31,7 @@ def category_left_ridentity_expr(cls: type, value: Category[A, B]):
     Left reverse identity:
         id <<< f == f
     """
-    lhs = identity(cls) |rcompose| value
+    lhs = identity(cls) |compose| value
     rhs = value
     return lhs, rhs
 
