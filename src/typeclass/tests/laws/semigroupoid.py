@@ -13,8 +13,8 @@ def semigroupoid_associativity_expr(f: Semigroupoid[A, B], g: Semigroupoid[B, C]
     Associativity law:
         (f >>> g) >>> h == f >>> (g >>> h)
     """
-    lhs = (f |compose| g) |compose| h
-    rhs = f |compose| (g |compose| h)
+    lhs = (f |rcompose| g) |rcompose| h
+    rhs = f |rcompose| (g |rcompose| h)
     return lhs, rhs
 
 
@@ -23,8 +23,8 @@ def semigroupoid_rassociativity_expr(f: Semigroupoid[A, B], g: Semigroupoid[B, C
     Reverse composition associativity:
         h <<< (g <<< f) == (h <<< g) <<< f
     """
-    lhs = h |rcompose| (g |rcompose| f)
-    rhs = (h |rcompose| g) |rcompose| f
+    lhs = h |compose| (g |compose| f)
+    rhs = (h |compose| g) |compose| f
     return lhs, rhs
 
 
@@ -33,6 +33,6 @@ def semigroupoid_compose_rcompose_expr(f: Semigroupoid[A, B], g: Semigroupoid[B,
     Derived Semigroupoid operation:
         f >>> g == g <<< f
     """
-    lhs = f |compose| g
-    rhs = g |rcompose| f
+    lhs = f |rcompose| g
+    rhs = g |compose| f
     return lhs, rhs
