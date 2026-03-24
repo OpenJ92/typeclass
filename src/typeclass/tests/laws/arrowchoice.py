@@ -1,6 +1,6 @@
 from typing import Callable, TypeVar
 
-from typeclass.typeclasses.arrow_choice import ArrowChoice
+from typeclass.typeclasses.arrowchoice import ArrowChoice
 from typeclass.typeclasses.symbols import (
     identity,
     arrow,
@@ -42,7 +42,7 @@ def arrowchoice_left_naturality_expr(
         return inner
 
     lhs = witness |left|  (witness |arrow| f)
-    rhs = witness |arrow| (witness |arrow| mapleft(f))
+    rhs = witness |arrow| mapleft(f)
     return lhs, rhs
 
 
@@ -68,7 +68,7 @@ def arrowchoice_right_naturality_expr(
         return inner
 
     lhs = witness |right| (witness |arrow| f)
-    rhs = witness |arrow| (witness |arrow| mapright(f))
+    rhs = witness |arrow| mapright(f)
     return lhs, rhs
 
 
@@ -153,7 +153,9 @@ def arrowchoice_fanin_expr(
         merge(Left(x))  = x
         merge(Right(y)) = y
     """
+    def merge(either):
+        return either.value
+
     lhs = value1 |oror| (witness, value2)
-    rhs =          (witness |arrow| (lambda e: e.value)) \
-        |rcompose| (value1 |plusplus| (witness, value2))
+    rhs = (witness |arrow| merge) |compose| (value1 |plusplus| (witness, value2))
     return lhs, rhs
