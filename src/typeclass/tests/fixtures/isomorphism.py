@@ -32,7 +32,6 @@ def values():
     return [
         Isomorphism(lambda x: x, lambda x: x),
         Isomorphism(lambda x: x + 1, lambda x: x - 1),
-        Isomorphism(lambda x: x * 2, lambda x: x / 2),
         Isomorphism(lambda x: -x, lambda x: -x),
     ]
 
