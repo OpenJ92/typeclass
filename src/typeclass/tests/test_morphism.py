@@ -26,6 +26,19 @@ from typeclass.tests.laws.arrow import (
     arrow_split_expr,
     arrow_fanout_expr,
 )
+from typeclass.tests.laws.arrowchoice import (
+    arrowchoice_left_naturality_expr,
+    arrowchoice_right_naturality_expr,
+    arrowchoice_left_identity_expr,
+    arrowchoice_right_identity_expr,
+    arrowchoice_left_composition_expr,
+    arrowchoice_right_composition_expr,
+    arrowchoice_split_choice_expr,
+    arrowchoice_fanin_expr,
+)
+from typeclass.tests.laws.arrowapply import (
+    arrowapply_arr_app_expr,
+)
 
 
 class MorphismTestCase(unittest.TestCase):
@@ -124,4 +137,58 @@ class TestMorphismArrow(MorphismTestCase):
         for value1, value2 in fx_morphism.pairs():
             with self.subTest(value1=value1, value2=value2):
                 lhs, rhs = arrow_fanout_expr(Morphism, value1, value2)
+                self.assert_morphism_expr_equal(lhs, rhs)
+
+
+class TestMorphismArrowChoice(MorphismTestCase):
+    def test_arrowchoice_left_naturality(self):
+        for f in fx_morphism.arrow_functions():
+            with self.subTest(f=f):
+                lhs, rhs = arrowchoice_left_naturality_expr(Morphism, f)
+                self.assert_morphism_expr_equal(lhs, rhs, inputs=fx_morphism.either_inputs())
+
+    def test_arrowchoice_right_naturality(self):
+        for f in fx_morphism.arrow_functions():
+            with self.subTest(f=f):
+                lhs, rhs = arrowchoice_right_naturality_expr(Morphism, f)
+                self.assert_morphism_expr_equal(lhs, rhs, inputs=fx_morphism.either_inputs())
+
+    def test_arrowchoice_left_identity(self):
+        lhs, rhs = arrowchoice_left_identity_expr(Morphism)
+        self.assert_morphism_expr_equal(lhs, rhs, inputs=fx_morphism.either_inputs())
+
+    def test_arrowchoice_right_identity(self):
+        lhs, rhs = arrowchoice_right_identity_expr(Morphism)
+        self.assert_morphism_expr_equal(lhs, rhs, inputs=fx_morphism.either_inputs())
+
+    def test_arrowchoice_left_composition(self):
+        for f, g in fx_morphism.pairs():
+            with self.subTest(f=f, g=g):
+                lhs, rhs = arrowchoice_left_composition_expr(Morphism, f, g)
+                self.assert_morphism_expr_equal(lhs, rhs, inputs=fx_morphism.either_inputs())
+
+    def test_arrowchoice_right_composition(self):
+        for f, g in fx_morphism.pairs():
+            with self.subTest(f=f, g=g):
+                lhs, rhs = arrowchoice_right_composition_expr(Morphism, f, g)
+                self.assert_morphism_expr_equal(lhs, rhs, inputs=fx_morphism.either_inputs())
+
+    def test_arrowchoice_split_choice(self):
+        for value1, value2 in fx_morphism.pairs():
+            with self.subTest(value1=value1, value2=value2):
+                lhs, rhs = arrowchoice_split_choice_expr(Morphism, value1, value2)
+                self.assert_morphism_expr_equal(lhs, rhs, inputs=fx_morphism.either_inputs())
+
+    def test_arrowchoice_fanin(self):
+        for value1, value2 in fx_morphism.pairs():
+            with self.subTest(value1=value1, value2=value2):
+                lhs, rhs = arrowchoice_fanin_expr(Morphism, value1, value2)
+                self.assert_morphism_expr_equal(lhs, rhs, inputs=fx_morphism.either_inputs())
+
+
+class TestMorphismArrowApply(MorphismTestCase):
+    def test_arrowapply_arr_app(self):
+        for f in fx_morphism.arrow_functions():
+            with self.subTest(f=f):
+                lhs, rhs = arrowapply_arr_app_expr(Morphism, f)
                 self.assert_morphism_expr_equal(lhs, rhs)

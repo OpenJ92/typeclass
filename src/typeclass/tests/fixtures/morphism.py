@@ -1,4 +1,7 @@
+# typeclass/tests/fixtures/morphism.py
+
 from typeclass.data.morphism import Morphism
+from typeclass.data.either import Left, Right
 
 
 def inputs():
@@ -11,6 +14,19 @@ def pair_inputs():
         (1, 2),
         (-1, 3),
         (10, -5),
+    ]
+
+
+def either_inputs():
+    return [
+        Left(0),
+        Right(0),
+        Left(1),
+        Right(2),
+        Left(-1),
+        Right(-5),
+        Left(10),
+        Right(3),
     ]
 
 
