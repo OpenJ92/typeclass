@@ -1,5 +1,3 @@
----
-
 # typeclass
 
 Haskell → Python typeclass isomorphism
@@ -34,5 +32,3 @@ result = run(expr)
 ## License
 
 See `LICENSE`
-
----
