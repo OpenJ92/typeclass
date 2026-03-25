@@ -44,7 +44,7 @@ jobs:
       id-token: write
     environment:
       name: pypi
-      url: https://pypi.org/p/typeclass
+      url: https://pypi.org/p/typeclass-core
 
     steps:
       - name: Download distributions
