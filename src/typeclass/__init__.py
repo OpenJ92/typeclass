@@ -1,5 +1,3 @@
-"""typeclass: symbolic algebraic structures for compositional computation."""
+from importlib.metadata import version
 
-__all__ = ["__version__"]
-
-__version__ = "1.0.2"
+__version__ = version("typeclass-core")

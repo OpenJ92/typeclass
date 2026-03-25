@@ -11,7 +11,7 @@ A symbolic algebraic framework for compositional computation in Python.
 ## Install
 
 ```bash
-pip install typeclass
+pip install typeclass-core
 ```
 
 Requires Python 3.14+
