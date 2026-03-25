@@ -1,14 +1,48 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=80", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "typeclass"
-version = "0.1.0"
-requires-python = ">=3.13"
+version = "1.0.0"
+description = "A symbolic, law-aware algebraic framework for compositional computation in Python."
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.14"
+authors = [
+  { name = "Jacob Vartuli-Schonberg" }
+]
+license = { file = "LICENSE" }
+keywords = [
+  "category-theory",
+  "typeclasses",
+  "functor",
+  "applicative",
+  "monad",
+  "arrow",
+  "parser-combinators",
+  "symbolic-computation"
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: Other/Proprietary License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed"
+]
+
+[project.urls]
+Homepage = "https://github.com/OpenJ92/typeclass"
+Repository = "https://github.com/OpenJ92/typeclass"
+Issues = "https://github.com/OpenJ92/typeclass/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+exclude = ["typeclass.tests", "typeclass.tests.*"]
