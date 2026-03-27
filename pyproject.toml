@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "typeclass-core"
-version = "1.0.3"
+version = "1.0.4"
 description = "A symbolic, law-aware algebraic framework for compositional computation in Python."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.14"
